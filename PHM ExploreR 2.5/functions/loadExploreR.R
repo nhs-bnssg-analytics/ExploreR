@@ -382,8 +382,7 @@ loadExploreR <- function(data, dat, input, output) {
   names(segColNames2) <- c("Demographic", "Clinical/LTCs", "Area", "Socio-economic (deprivation)", "GlobalGroups")
 
   updatePickerInput(session, "twoCARTVar1", choices = segColNames2,
-                    selected = segColNames)#,
-                    # options = list(`actions-box` = TRUE, size = 12, noneSelectedText = "Please select at least 1 variable"))
+                    selected = segColNames)
   updatePickerInput(session, "twoRisk1Var1", choices = segColNames2,
                     selected = segColNames)
   
@@ -401,14 +400,11 @@ loadExploreR <- function(data, dat, input, output) {
   
   updatePickerInput(session, "oneGeneralTableFields", choices = segColNames3)
   
-  t2dt <- c("total_cost", "total_act", "clinic.misc.Secondary_NonElective_Cost")
-  names(t2dt) <- sapply(c("total_cost", "total_act", "Secondary Non-Eletive Cost"),makeNicePPY)
-  # "clinic.misc.Secondary_NonElective_Cost"                                  
-  # "clinic.misc.Secondary_NonElective_No"                                     "clinic.misc.Secondary_NonElective_Flag"   
-  
-  
-  
-  updatePickerInput(session, "twoCARTVar2", choices = t2dt)
+  t2dt <- c("total_cost", "total_act")
+  names(t2dt) <- sapply(c("total_cost", "total_act"),makeNicePPY)
+
+  # updatePickerInput(session, "twoCARTVar2", choices = t2dt)
+  updatePickerInput(session, "twoCARTVar2", choices = segColNames2)
   
   t2Risk <- colnames(dat$attributes)[startsWith(colnames(dat$attributes), "util.pod")]
   names(t2Risk) <- sapply(t2Risk, removePrefix) %>% sapply(makeNice)
