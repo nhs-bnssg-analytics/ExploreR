@@ -636,28 +636,29 @@ body <- dashboardBody(tags$script(HTML("$('body').addClass('fixed');")),
                                                  )
                                                ),
                                            ),
-                                           box(width = 12, title = "Add to GlobalGroups",
-                                               fluidRow(
-                                                 column(width = 6,
-                                                        textInput("two3x3GGName", "Name:")
-                                                 ),
-                                                 column(width = 3, style = "margin-top: 25px;",
-                                                        # p(" ", actionLink(inputId = "twoCARTText5",
-                                                        #                   icon = icon("info-circle"),
-                                                        #                   label = HTML(""))),
-                                                        # bsTooltip("twoCARTText5", title = "If the labels overlap, it may be useful to view the rules seperately from the graph. Please note the CART algorithm clusters based on averages of the target variable; these are used to label the leaf nodes."),
-                                                        
-                                                 ),
-                                                 column(width = 3, style = "margin-top: 25px;",
-                                                        actionButton("two3x3GGAdd", "Add")
-                                                 )
-                                               ),
-                                               fluidRow(
-                                                 column(width = 12,
-                                                        textOutput("two3x3GGErr")
-                                                 )
-                                               )
-                                           )
+                                           uiOutput("two3x3AddGG")
+                                           # box(width = 12, title = "Add to GlobalGroups",
+                                           #     fluidRow(
+                                           #       column(width = 6,
+                                           #              textInput("two3x3GGName", "Name:")
+                                           #       ),
+                                           #       column(width = 3, style = "margin-top: 25px;",
+                                           #              # p(" ", actionLink(inputId = "twoCARTText5",
+                                           #              #                   icon = icon("info-circle"),
+                                           #              #                   label = HTML(""))),
+                                           #              # bsTooltip("twoCARTText5", title = "If the labels overlap, it may be useful to view the rules seperately from the graph. Please note the CART algorithm clusters based on averages of the target variable; these are used to label the leaf nodes."),
+                                           #              
+                                           #       ),
+                                           #       column(width = 3, style = "margin-top: 25px;",
+                                           #              actionButton("two3x3GGAdd", "Add")
+                                           #       )
+                                           #     ),
+                                           #     fluidRow(
+                                           #       column(width = 12,
+                                           #              textOutput("two3x3GGErr")
+                                           #       )
+                                           #     )
+                                           # )
                                          )
                                   ),
                                   
@@ -760,27 +761,8 @@ body <- dashboardBody(tags$script(HTML("$('body').addClass('fixed');")),
                                                
                                                plotlyOutput("twoClusterPie", height = '800px'),
                                            ),
-                                           box(width = 12, title = "Add to GlobalGroups",
-                                               fluidRow(
-                                                 column(width = 6,
-                                                        textInput("twoClusterGGName", "Refence Name:")
-                                                 ),
-                                                 column(width = 3, style = "margin-top: 25px;",
-                                                        # p(" ", actionLink(inputId = "twoCARTText5",
-                                                        #                   icon = icon("info-circle"),
-                                                        #                   label = HTML(""))),
-                                                        # bsTooltip("twoCARTText5", title = "If the labels overlap, it may be useful to view the rules seperately from the graph. Please note the CART algorithm clusters based on averages of the target variable; these are used to label the leaf nodes."),
-                                                 ),
-                                                 column(width = 3, style = "margin-top: 25px;",
-                                                        actionButton("twoClusterGGAdd", "Add")
-                                                 )
-                                               ),
-                                               fluidRow(
-                                                 column(width = 12,
-                                                        textOutput("twoClusterGGErr")
-                                                 )
-                                               )
-                                           )
+                                           uiOutput("twoClusterAddGG")
+                                           
                                          )
                                   ),
                                   column(width = 3,
@@ -979,28 +961,29 @@ body <- dashboardBody(tags$script(HTML("$('body').addClass('fixed');")),
                                                uiOutput("fiveRiskBox3"),
                                                uiOutput("fiveRiskBox4")
                                            ),
-                                           box(width = 12, title = "Add to GlobalGroups",
-                                               fluidRow(
-                                                 column(width = 6,
-                                                        textInput("fiveRiskGGName", "Refence Name:")
-                                                 ),
-                                                 column(width = 3, style = "margin-top: 25px;",
-                                                        # p(" ", actionLink(inputId = "twoCARTText5",
-                                                        #                   icon = icon("info-circle"),
-                                                        #                   label = HTML(""))),
-                                                        # bsTooltip("twoCARTText5", title = "If the labels overlap, it may be useful to view the rules seperately from the graph. Please note the CART algorithm clusters based on averages of the target variable; these are used to label the leaf nodes."),
-                                                        
-                                                 ),
-                                                 column(width = 3, style = "margin-top: 25px;",
-                                                        actionButton("fiveRiskGGAdd", "Add")
-                                                 )
-                                               ),
-                                               fluidRow(
-                                                 column(width = 12,
-                                                        textOutput("fiveRiskGGErr")
-                                                 )
-                                               )
-                                           )
+                                           uiOutput("fiveRiskAddGG")
+                                           # box(width = 12, title = "Add to GlobalGroups",
+                                           #     fluidRow(
+                                           #       column(width = 6,
+                                           #              textInput("fiveRiskGGName", "Refence Name:")
+                                           #       ),
+                                           #       column(width = 3, style = "margin-top: 25px;",
+                                           #              # p(" ", actionLink(inputId = "twoCARTText5",
+                                           #              #                   icon = icon("info-circle"),
+                                           #              #                   label = HTML(""))),
+                                           #              # bsTooltip("twoCARTText5", title = "If the labels overlap, it may be useful to view the rules seperately from the graph. Please note the CART algorithm clusters based on averages of the target variable; these are used to label the leaf nodes."),
+                                           #              
+                                           #       ),
+                                           #       column(width = 3, style = "margin-top: 25px;",
+                                           #              actionButton("fiveRiskGGAdd", "Add")
+                                           #       )
+                                           #     ),
+                                           #     fluidRow(
+                                           #       column(width = 12,
+                                           #              textOutput("fiveRiskGGErr")
+                                           #       )
+                                           #     )
+                                           # )
                                          ),
                                          
                                   ),
