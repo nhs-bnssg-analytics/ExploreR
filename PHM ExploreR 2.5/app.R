@@ -56,7 +56,7 @@ server <- function(input,output,session){
   source("./functions/dataLoadCheck.R", local = TRUE)
   lm_mod <- reactiveValues()
   lm_mod$lm_obj <- NULL
-
+  
   toLoad <- reactiveValues(
     zero3 = F,
     section1 = F,
@@ -74,7 +74,7 @@ server <- function(input,output,session){
     cohort = FALSE,
     loadTheo = FALSE
   )
-
+  
   updateValues <- function(dat2, toLoad) {
     # Section 1 (graph summaries)
     toLoad$section1 <- TRUE
@@ -94,7 +94,7 @@ server <- function(input,output,session){
     # Section 5 (Risk Stratification)
     toLoad
   }
-
+  
   ##
   ## Sidebar upon loading
   output$tabs <- renderMenu({
@@ -102,29 +102,29 @@ server <- function(input,output,session){
                 menuItem("Landing Page",
                          tabName="landingPage"))
   })
-
+  
   # Loading Page UI part 1
   output$zeroLoadingPopDataUI <- renderUI({
     landingUIPart1(dat, dat2)
   })
-
+  
   observeEvent(input$zeroUploadPopData, {
     # Render sidebar to show file upload options
     output$tabs <- renderMenu({
-          sidebarMenu(id="tabsData",
-                      menuItem("Landing Page",
-                               tabName="landingPage"),
-                      menuItem("Initalisation (Population Dataset)",
-                               tabName="initPopData",
-                               menuSubItem("Data Loading",
-                                           tabName="zeroData"))
-          )
-      })
+      sidebarMenu(id="tabsData",
+                  menuItem("Landing Page",
+                           tabName="landingPage"),
+                  menuItem("Initalisation (Population Dataset)",
+                           tabName="initPopData",
+                           menuSubItem("Data Loading",
+                                       tabName="zeroData"))
+      )
+    })
     # Jump to page
     updateTabItems(session, "tabsData", selected = "zeroData")
-
+    
   })
-
+  
   # Modals for landing page
   ####################
   observeEvent(input$zeroTerminology, {
@@ -138,7 +138,7 @@ server <- function(input,output,session){
         p("A: 'Analysis Dataset' refers to a subset of the Population Dataset. For example, if the Population Dataset covers an entire ICS, an Analysis Dataset could be an ICP."),
         p("This structure exists to allow users to focus on particular subsets of their system without having to load in new data."),
         br(),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -146,7 +146,7 @@ server <- function(input,output,session){
       )
     )
   })
-
+  
   observeEvent(input$zeroLandingSetup, {
     showModal(
       modalDialog(
@@ -154,7 +154,7 @@ server <- function(input,output,session){
         p("If there is no Population Dataset loaded, click 'Upload Files'. Please refer to the handbook for data preparation and structure, then follow the steps in subsequent tabs."),
         p("If there is a Population Dataset, to load the ExploreR simply select the desired Analysis Dataset from the second box, and click 'Go!'"),
         p("Further Analysis Datasets can be added by any user. Click 'Add New Analysis Dataset' and follow the instructions on the next page."),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -171,8 +171,8 @@ server <- function(input,output,session){
           a("Email the BNSSG Mdodelling and Analytics Team", href = "mailto:bnssg.analytics@nhs.net"),
           " or ",
           a("Applied Analytics at The Health Foundation", href = "mailto:Applied.Analytics@health.org.uk")
-          ),
-
+        ),
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -180,11 +180,11 @@ server <- function(input,output,session){
       )
     )
   })
-
+  
   ##############################################################
   ## Uploading data files   ####################################
   ##############################################################
-
+  
   observeEvent(input$zeroRad, {
     output$ZeroDataUI <- renderUI({
       if (input$zeroRad == "Local Files") {
@@ -211,8 +211,8 @@ server <- function(input,output,session){
       }
     })
   })
-
-
+  
+  
   observeEvent(input$loadFileData, {
     # freezeReactiveValue(input,"loadFileData")
     # A case when using file uploads, and a case when SQL-ing the data
@@ -246,7 +246,7 @@ server <- function(input,output,session){
         # activity$dep_date <<- as.POSIXct(activity$dep_date)
       }
       dataLoadCheck(attributes, activity, output)
-
+      
       output$tabs <- renderMenu({
         sidebarMenu(id="tabsAll",
                     menuItem("Landing Page",
@@ -262,19 +262,19 @@ server <- function(input,output,session){
       updateTabsetPanel(session, "tabsAll", selected = "zeroField")
       toLoad$zero3 <<- TRUE
       renderThree()
-
+      
       "Data successfully loaded."
     })
   })
-
-
+  
+  
   ## ######################################################################
   ## Setting field defaults
-
+  
   observeEvent(input$aeidentifierCol, ignoreInit = TRUE, {
     updateSelectInput(session, "aeidentifierVal", choices = unique(activity[,input$aeidentifierCol]))
   })
-
+  
   ## Setting the UI for selecting specific values of BtH segment fields
   lapply(c("twoBTHFrailty", "twoBTHLimitedReserve", "twoBTHDecline","twoBTHDisability","twoBTHChronic", "twoBTHMaternal", "twoBTHAcute"), function(x) {
     observeEvent(input[[x]], ignoreInit = TRUE, {
@@ -326,12 +326,12 @@ server <- function(input,output,session){
       })
     })
   })
-
+  
   ## End of BtH select values
-
-
+  
+  
   observeEvent(input$zeroThreeProceed,{
-
+    
     ######################################################################################################################################################
     # # Error testing functions, removed to save RAM
     # replace_na_0 <- function(values) {
@@ -367,7 +367,7 @@ server <- function(input,output,session){
     # activity <<- activity %>% mutate(across(starts_with("pod"), replace_na_nl))
     #######################################################################################################################################################
     select <- dplyr::select
-
+    
     gc()
     # Save down the theodata - any activity beyond 1 year of historic
     # Do this to save RAM in subsequent operations, as the size of activity can be reduced
@@ -382,12 +382,12 @@ server <- function(input,output,session){
         }
       }
     }
-
+    
     # Cut activity and save down in chunks
     # want no more than 10000 in each group
     mintime <- min(activity$arr_date, na.rm = T)
     maxtime <- max(activity$dep_date, na.rm = T)
-
+    
     maxDate <- max(activity$dep_date, na.rm = T)
     maxDate2 <- ymd(maxDate) - years(1)
     if(is.na(maxDate2)) {
@@ -397,7 +397,7 @@ server <- function(input,output,session){
       maxDate2 <- as.Date(maxDate2)
     }
     saveRDS(activity %>% filter(.data[["arr_date"]] >= maxDate2), paste0("./data/act_.rds")) # this will be the activity file needed for dep()
-
+    
     ids <- unique(activity$id)
     gn <- ceiling(length(ids) / 10000) # is how many groups we want
     df <- lapply(1:gn, function(x) {
@@ -413,7 +413,7 @@ server <- function(input,output,session){
     df <- do.call(rbind, df)
     df <- df[!is.na(df$id),]
     print("Saved files")
-
+    
     actLookUp <- rbind(df,data.frame(id = which(!attributes$id%in%ids), lookUp = rep(-1, length(which(!attributes$id%in%ids)))))
     ####
     rm(activity, envir = as.environment(".GlobalEnv"))
@@ -423,7 +423,7 @@ server <- function(input,output,session){
     gc()
     source("./functions/act_format.R")
     source("./functions/att_format.R")
-
+    
     # TODO crash if either simple of complex LTCs are empty?
     attributes <- att(attributes, activity, input, output)
     dat <<- left_join(attributes,
@@ -443,12 +443,12 @@ server <- function(input,output,session){
     dat2$mintime <<- mintime
     dat2$maxtime <<- maxtime
     dat2$actLookUp <<- actLookUp
-
+    
     dat <<- dat[-2]
     saveRDS(dat ,"./data/dat.rds")
     saveRDS(dat2 ,"./data/dat2.rds")
-
-
+    
+    
     output$tabs <- renderMenu({
       sidebarMenu(id="tabsData",
                   menuItem("Landing Page",
@@ -461,16 +461,16 @@ server <- function(input,output,session){
       landingUIPart2(dat, dat2)
     })
     updateTabItems(session, "tabsData", selected = "landingPage")
-
+    
   })
   ############################################################
   ############################################################
-
+  
   # Loading Page UI part 2
   output$zeroLoadingAnalysisDataUI <- renderUI({
     landingUIPart2(dat, dat2)
   })
-
+  
   observeEvent(input$zeroAnalysisDataPicker, {
     print("Analysis dataset text")
     # TODO need to cache activity count in a persistent way - problem when subset is selected
@@ -485,25 +485,25 @@ server <- function(input,output,session){
     )
   })
   # TODO re-enable as and when required for BNSSG use
-  # observeEvent(input$zeroAnalysisDataPicker, once = T, {
-  #   showModal(
-  #     modalDialog(
-  #       title = "User Agreement",
-  #       p("By using the PHM ExploreR you agree to use the tool responsibly, as per your duty of care. You also agree to use the ExploreR to answer considered questions, as opposed to ",
-  #       "'fishing'. In addition, you have a duty to maintain confidentiality, as patient-level data is present in the tool."),
-  #       p("Subsequently, as we cannot physically stop you from taking screenshots or images from the tool, in the event you do take some to share with collegues, it is your duty to ",
-  #         "ensure confidentiality is maintained."),
-  #       "If you have any concerns about being able to responsibly use this tool, close the window.",
-  #       footer = list(modalButton("I accept")),
-  #       easyClose = F
-  #     )
-  #   )
-  # })
-
+  observeEvent(input$zeroAnalysisDataPicker, once = T, {
+    showModal(
+      modalDialog(
+        title = "User Agreement",
+        p("By using the PHM ExploreR you agree to use the tool responsibly, as per your duty of care. You also agree to use the ExploreR to answer considered questions, as opposed to ",
+        "'fishing'. In addition, you have a duty to maintain confidentiality, as patient-level data is present in the tool."),
+        p("Subsequently, as we cannot physically stop you from taking screenshots or images from the tool, in the event you do take some to share with collegues, it is your duty to ",
+          "ensure confidentiality is maintained."),
+        "If you have any concerns about being able to responsibly use this tool, close the window.",
+        footer = list(modalButton("I accept")),
+        easyClose = F
+      )
+    )
+  })
+  
   ## Add analysis dataset
   observeEvent(input$zeroAnalysisDataPickerAdd, {
     showModal(
-       modalDialog(
+      modalDialog(
         title = "Please wait while loading.",
         footer = list(),
         easyClose = F
@@ -526,7 +526,7 @@ server <- function(input,output,session){
     toLoad$analysisDatasetRules <<- 1
     toLoad$analysisDatasetRulesE <<- 1
     toLoad$analysisDataset <<- T
-
+    
     dat2$AnalysisDataset <<- list()
     dat2$AnalysisDataset$rules <<- list()
     # TODO fix to make sure options are NOT infinitely many
@@ -537,35 +537,35 @@ server <- function(input,output,session){
     updateTabItems(session, "tabsData", selected = "analysisData")
     removeModal()
   })
-
+  
   ###########################################
   ### Analysis Dataset    ###################
   ###########################################
   # Analysis dataset modals
-
+  
   observeEvent(input$zeroAnalysis1, {
     showModal( modalDialog(
       title = "What is an Analysis Dataset?",
       p("Analysis Dataset is a subset of the Population Dataset. For example, if the Population Dataset covers an entire ICS, an Analysis Dataset could be an ICP."),
       p("This structure exists to allow users to focus on particular subsets of their system without having to load in new data - e.g. only looking at a particular ICS."),
       p("Analysis Datasets created on this page are saved for future use (they will be present the next time the ExploreR is started)."),
-
+      
       footer = tagList(
         modalButton("OK", icon = NULL)
       ),
       easyClose =TRUE
     ))
   })
-
+  
   observeEvent(input$zeroAnalysis2, {
     showModal( modalDialog(
       title = "Creating an Analysis Dataset",
-
+      
       p("To create an Analysis Dataset, follow these steps:"),
-
+      
       p("1. Determine what criteria defines the Dataset."),
       p("2. Split this criteria into simple statements, such as 'age > 18', and 'has hypertension'"),
-
+      
       p("3. For each of these statements, create a new line (using button 'Add New Rule')."),
       p("4. For each clause, select the appropriate field name, then the values to include in the Dataset. There are multiple ways of selecting these values. ",
         "These options can be selected from the dropdown to the right of the field. Details of the operators are at the bottom of this popup."),
@@ -579,7 +579,7 @@ server <- function(input,output,session){
       p("'in numeric range' - values of selected field lie between 2 input values. Suitable for numeric data. Uses <= and >="),
       p("'>=' and '<=' - lower/upper limit, respectively"),
       p("'in (multiple choice select)' - multiple values to include. Recommended for non-numeric options. Useful for seeing distinct values of the selected field. Cannot be used if more than 200 unique values are present."),
-
+      
       footer = tagList(
         modalButton("OK", icon = NULL)
       ),
@@ -591,41 +591,41 @@ server <- function(input,output,session){
       title = "Uploading IDs",
       p("If there is a pre-identified group of interest, IDs can be uploaded via a .csv file."),
       p("This file should contain only a single column of IDs, with no row or column names."),
-
+      
       footer = tagList(
         modalButton("OK", icon = NULL)
       ),
       easyClose =TRUE
     ))
   })
-
-
+  
+  
   # Add new line option
   observeEvent({input$zeroAnalysisDataNewUI}, {
     print("Adding new line")
-
+    
     l <- length(dat2$AnalysisDataset$rules)
     freezeReactiveValue(input,"zeroAnalysisDataNewUI")
     freezeReactiveValue(input, paste0("zeroAnalysisDatasetRule",l+1,"Delete"))
-
+    
     dat2$AnalysisDataset$rules[[l+1]] <<- c(dat2$cohortDefaultCols[1],
-      "in (multiple choices select)",
-      dat2$cohortDefaultVals)
-
+                                            "in (multiple choices select)",
+                                            dat2$cohortDefaultVals)
+    
     dat2$AnalysisDataset$join[[l]] <<- "AND"#isolate(input$zeroAnalysisDataUIandor)
-
+    
     toLoad$analysisDatasetRules <<- toLoad$analysisDatasetRules + 1
     if(toLoad$analysisDatasetRules > toLoad$analysisDatasetRulesE) {
       toLoad$analysisDatasetRulesE <<- toLoad$analysisDatasetRules
     }
     updateAnalysisDatasetIDUI(toLoad, input, output, dat2, dat)
-
+    
     updateAnalysisDatasetIDUISelectsFull(toLoad, input, output, dat2)
-
+    
     print("Added new line")
-
+    
   })
-
+  
   # need to move all data assignments to c()
   observeEvent(toLoad$analysisDatasetRulesE, {
     lapply(toLoad$analysisDatasetRulesE, function(x) {
@@ -646,30 +646,30 @@ server <- function(input,output,session){
         # Update the available options for this
         renderAnalysisDatasetIDUISelectsX(x, dat, dat2, data, input, output, new = T)
       })
-
+      
       # Wipe memory of selected options - if many from multiple select
       observeEvent(input[[paste0("zeroAnalysisDataset", x,"SelectI")]], ignoreInit = T, {
         print("Adding selected value to memory1")
         dat2$AnalysisDataset$rules[[x]] <<- isolate(c(dat2$AnalysisDataset$rules[[x]][1:2], input[[paste0("zeroAnalysisDataset", x,"SelectI")]]))
       })
-
+      
       observeEvent(input[[paste0("zeroAnalysisDataset", x,"SelectR1")]], ignoreInit = T, {
         print("Adding selected value to memory2")
         dat2$AnalysisDataset$rules[[x]] <<- isolate(c(dat2$AnalysisDataset$rules[[x]][1:2], input[[paste0("zeroAnalysisDataset", x,"SelectR1")]]))
       })
-
+      
       observeEvent(input[[paste0("zeroAnalysisDataset", x,"SelectR2")]], ignoreInit = T, {
         print("Adding selected value to memory3")
         dat2$AnalysisDataset$rules[[x]] <<- isolate(c(dat2$AnalysisDataset$rules[[x]][1:3], input[[paste0("zeroAnalysisDataset", x,"SelectR2")]]))
       })
-
+      
       observeEvent(input[[paste0("zeroAnalysisDataset", x,"SelectC")]], ignoreInit = T, {
         print(paste0("Adding selected value to memory4 ", x))
         dat2$AnalysisDataset$rules[[x]] <<- c(dat2$AnalysisDataset$rules[[x]][1:2],
                                               isolate(input[[paste0("zeroAnalysisDataset", x,"SelectC")]])
-                                              )
+        )
       })
-
+      
       observeEvent(input[[paste0("zeroAnalysisDatasetRule",x,"Delete")]], ignoreInit = T, {
         if(length(dat2$AnalysisDataset$rules) > 1) {
           print("Deleting a line")
@@ -750,7 +750,7 @@ server <- function(input,output,session){
       }))) < length(dat2$AnalysisDataset$rules)) {
         output$zeroAnalysisDatasetGetIDsMessage <- renderText(paste0("Missing values found in rules."))
       } else if(length(which(sapply(dat2$AnalysisDataset$rules, length) > 2)) == length(dat2$AnalysisDataset$rules)) {
-
+        
         analysisSet <- getAnalysisDatasetV2_Text(input,dat,dat2$AnalysisDataset, input$zeroAnalysisDataFilterOrder)
         
         # Only get cohort if we can feasibly do so
@@ -794,11 +794,11 @@ server <- function(input,output,session){
     
     
   })
-
+  
   observeEvent(input$zeroAnalysisDatasetBack, {
     updateTabItems(session, "tabsData", selected = "landingPage")
   })
-
+  
   # getAnalysisDataset <- function(input,dat,fullRuleset) {
   #   data <- lapply(1:length(fullRuleset$rules), function(y) {
   #     x <- fullRuleset$rules[[y]]
@@ -844,7 +844,7 @@ server <- function(input,output,session){
   #   # browser()
   #   return(data)
   # }
-
+  
   observeEvent(input$zeroAnalysisDataUploadIdsButton, {
     # browser()
     ext <- tools::file_ext(input$zeroAnalysisDataUploadIds$datapath)
@@ -859,10 +859,10 @@ server <- function(input,output,session){
         # Correct format
         dat2$AnalysisDatasets[[input$zeroAnalysisDatasetName]] <<- dat$attributes$id %in% dat2$cohortIDs[[1]]
         output$zeroAnalysisDatasetGetIDsMessage <- renderText(paste0("Successfully identified ",
-                                                                  isolate(length(which(dat2$AnalysisDatasets[[input$zeroAnalysisDatasetName]]))),
-                                                          " individuals in dataset."))
+                                                                     isolate(length(which(dat2$AnalysisDatasets[[input$zeroAnalysisDatasetName]]))),
+                                                                     " individuals in dataset."))
         dat2$AnalysisDatasetsStats[[input$zeroAnalysisDatasetName]] <<- sum(dat$attributes$total_act[dat2$AnalysisDatasets[[input$zeroAnalysisDatasetName]]])
-
+        
         updatePickerInput(session, "zeroAnalysisDataPicker", choices = colnames(dat2$AnalysisDatasets), selected = input$zeroAnalysisDatasetName)
         updatePickerInput(session, "zeroAnalysisDatasetToRemove", choices = colnames(dat2$AnalysisDatasets)[-1], selected = input$zeroAnalysisDatasetToRemove)
         saveRDS(dat2, "./data/dat2.rds")
@@ -878,30 +878,30 @@ server <- function(input,output,session){
       }
     }
   })
-
+  
   observeEvent(input$zeroAnalysisDatasetRemove, {
-
+    
     name = input$zeroAnalysisDatasetToRemove
-
+    
     showModal( modalDialog(
       title = paste0("Removing dataset", name),
       p("Please wait while processing."),
       footer = tagList(),
       easyClose = F
     ))
-
+    
     output$zeroAnalysisDatasetRemoveMessage <- renderText({
       paste("Removed Analysis Dataset ", name)
     })
-
+    
     dat2$AnalysisDatasets[[input$zeroAnalysisDatasetToRemove]] <<- NULL
     dat2$AnalysisDatasetsStats[[input$zeroAnalysisDatasetToRemove]] <<- NULL
-
+    
     updatePickerInput(session, "zeroAnalysisDataPicker", choices = colnames(dat2$AnalysisDatasets))
     updatePickerInput(session, "zeroAnalysisDatasetToRemove", choices = colnames(dat2$AnalysisDatasets)[-1])
     # TODO Add below back in
     saveRDS(dat2, "./data/dat2.rds")
-
+    
     output$zeroAnalysisDataText <- renderText(
       paste0(
         "The dataset '", makeNice(input$zeroAnalysisDataPicker),
@@ -912,11 +912,11 @@ server <- function(input,output,session){
     )
     removeModal()
   })
-
+  
   ###########################################
   ###########################################
   ###########################################
-
+  
   ## Load main part
   observeEvent(input$zeroLoadingMainGo, {
     # sidebar
@@ -931,7 +931,7 @@ server <- function(input,output,session){
     output$tabs <- renderMenu({
       sidebar
     })
-
+    
     if("util.segmentation.BtHSegment"%in%colnames(dat$attributes)) {
       output$twoSegOutput <- renderMenu({
         menuItem("Segmentation",
@@ -961,14 +961,18 @@ server <- function(input,output,session){
     }
     dat2 <<- readRDS("./data/dat2.rds")
     # if(nrow(dat$attributes) < nrow(dat2$AnalysisDatasets)) {
-      # print("Re-reading attributes data")
+    # print("Re-reading attributes data")
     dat <<- readRDS("./data/dat.rds")
     # }
     gc()
     dat$attributes <<- dat$attributes[dat2$AnalysisDatasets[[input$zeroAnalysisDataPicker]],]
     gc()
     # Render file page (if applicable)
-
+    output$two3x3AddGG <- renderUI({})
+    output$twoCARTAddGG <- renderUI({})
+    output$twoClusterAddGG <- renderUI({})
+    output$fiveRiskAddGG <- renderUI({})
+    
     # Jump to page - for now, to cohort page
     updateTabItems(session, "tabsAll", selected = "navTab")
     # NOTE: loading of the rest of the tool needs to be moved here
@@ -977,14 +981,14 @@ server <- function(input,output,session){
     toLoad$segBTH <<- F
     toLoad$loadTheo <<- F
     toLoad$threeCohort <<- F
-
+    
     toLoad <- updateValues(dat2, toLoad)
-
-
+    
+    
   })
-
-
-##############################################
+  
+  
+  ##############################################
   ##
   ## Tools Main Section
   ##
@@ -993,10 +997,10 @@ server <- function(input,output,session){
   #
   # Begin by loading each page according to toLoad's TRUE/FALSE values
   #
-
+  
   source("./functions/loadExploreR.R", local = TRUE, encoding = "utf-8")
   source("./functions/section1Tools.R", local = TRUE, encoding = "utf-8")
-
+  
   observeEvent(toLoad$section1, {
     if(toLoad$section1) {
       print("Loading")
@@ -1007,11 +1011,11 @@ server <- function(input,output,session){
       removeModal()
     }
   })
-
+  
   observeEvent(input$threeCohort, {
     updatethreeCohortIDUI(toLoad, input, output, dat2, dat)
   })
-
+  
   observeEvent(input$navTabJCohort, {
     updateTabItems(session, "tabsAll", selected = "threeID")
   })
@@ -1040,7 +1044,7 @@ server <- function(input,output,session){
       } else {
         output$navTabMessage <- renderText(paste0("Could not add ", makeNice(isolate(input$navTabGlobalVar)), " as variable since it has too many unique values."))
       }
-
+      
     }
   })
   observeEvent(input$navTabGlobalVarRemove, {
@@ -1062,7 +1066,7 @@ server <- function(input,output,session){
       p("The option on this page exists to allow users to customise the fields available.",
         "To add a field, select it from the dropdown, then click 'Add'. Similarly, fields can also be removed."),
       p("A field may only be added if it is not already in GlobalGroups. In addition, ",
-      "please note only fields with fewer than 11 unique elements may be added."),
+        "please note only fields with fewer than 11 unique elements may be added."),
       p("WARNING: please minimise removal of default options to minimise risk of crashing."),
       footer = tagList(
         modalButton("OK", icon = NULL)
@@ -1070,17 +1074,17 @@ server <- function(input,output,session){
       easyClose =TRUE
     ))
   })
-
-
+  
+  
   ############################################################################################################################################
   # 1.1 Demog Tab
-
+  
   observeEvent({input$oneDemogCountPercentage
     input$oneDemogStackedSeparate
     input$oneDemogGroupBy
     input$oneDemogClinNeed}, {
       output$oneDemogPlot1 <- renderPlotly({
-
+        
         group <- input$oneDemogGroupBy %>% groupLookUp(dat2, .)
         print("Demog, main")
         data <- if(is.na(group)) {
@@ -1103,45 +1107,45 @@ server <- function(input,output,session){
         poppyramid(data, group, input$oneDemogClinNeed, input$oneDemogCountPercentage, input$oneDemogStackedSeparate, input)
       })
     })
-
-
+  
+  
   ############################################################################################################################################
   # 1.2 Multimorbidity and population by conditions
-
+  
   observeEvent({input$oneClinY
     input$oneClinGroupBy}, {
       if(toLoad$section1) {
         data <- dat$attributes$util.ltc_sum %>% as.data.frame()
-
+        
         p <- try({clinicPlotSolve(dat, data, input$oneClinY, groupLookUp(dat2, input$oneClinGroupBy),
                                   guideText = input$oneClinGroupBy)}, silent = TRUE)
         if(class(p) == "try-error") {print(p)} else {
           output$oneClinPlot1 <- renderPlotly({p})
         }
       }
-  })
-
+    })
+  
   output$graph1 <- renderPlotly({
     values <- dat$attributes %>% select(starts_with("clinic.")) %>% select(!starts_with("clinic.misc")) %>% select(!starts_with("clinic.any")) %>%
       colSums()
     values <- values / nrow(dat$attributes) * 100
     data <- data.frame(ltc = colnames(dat$attributes %>% select(starts_with("clinic.")) %>% select(!starts_with("clinic.misc")) %>% select(!starts_with("clinic.any"))),# %>% makeNice(),
-               percentage = values)
+                       percentage = values)
     p <- data[order(data$percentage, decreasing = FALSE),] %>%
       # mutate(ltc = makeNice(ltc)) %>%
       mutate(ltc = factor(ltc, levels = ltc)) %>%
-    ggplot(aes(x=ltc, y=percentage)) +
+      ggplot(aes(x=ltc, y=percentage)) +
       geom_bar(stat = "identity") + ggtitle("  ") +
       xlab("LTC") + ylab("% of population")  +
       coord_flip()
     ggplotly(p)
   })
-
-
-
+  
+  
+  
   #################################################################################################################################################
   # 1.3 Spending by POD type
-
+  
   observeEvent({input$oneActCoA
     input$oneActVertical
     input$oneActX}, {
@@ -1153,18 +1157,18 @@ server <- function(input,output,session){
             d[["selectedGroup"]] <- factor(d[[selectedGroup]] )
             try({ p <- #
               ggplotly(ggplot(
-              d,
-              aes_string(x="pod_l1", y="selectedGroup", size= "cost", fill = "cost", color = "cost", text = "text")) +
-                geom_point(shape=21) +
-                ggtitle("Bubbleplot of Points of Delivery") +
-                xlab("Point of Delivery") + #  (POD)
-                ylab(input$oneActVertical)  + labs(color=input$oneActCoA) + 
-                guides(fill = FALSE) +
-                scale_colour_continuous(labels=scales::label_number_si()) +
-                scale_fill_continuous(labels=scales::label_number_si()) +
-                theme(axis.text.x = element_text(angle = 45, hjust=1)),
-              tooltip = "text")
-              })
+                d,
+                aes_string(x="pod_l1", y="selectedGroup", size= "cost", fill = "cost", color = "cost", text = "text")) +
+                  geom_point(shape=21) +
+                  ggtitle("Bubbleplot of Points of Delivery") +
+                  xlab("Point of Delivery") + #  (POD)
+                  ylab(input$oneActVertical)  + labs(color=input$oneActCoA) + 
+                  guides(fill = FALSE) +
+                  scale_colour_continuous(labels=scales::label_number_si()) +
+                  scale_fill_continuous(labels=scales::label_number_si()) +
+                  theme(axis.text.x = element_text(angle = 45, hjust=1)),
+                tooltip = "text")
+            })
             output$oneActivityPlot2 <- renderPlotly({
               p
             })
@@ -1193,10 +1197,10 @@ server <- function(input,output,session){
         })
       }
     })
-
-
+  
+  
   # 1.4 Deprivation
-
+  
   observeEvent({input$oneDeprivationY
     input$oneDeprivationGroupBy}, {
       if(toLoad$section1 & toLoad$dep) {
@@ -1207,11 +1211,11 @@ server <- function(input,output,session){
                                                                     ,
                                                                     guideText = input$oneDeprivationGroupBy)%>%
             layout(barmode="overlay")
-          })
-        }
+        })
+      }
     })
   # 1.5 Geography
-
+  
   observeEvent({input$oneGeoX
     input$oneGeoY
     input$oneGeoGroupBy},ignoreInit = TRUE, {
@@ -1225,16 +1229,16 @@ server <- function(input,output,session){
                    xaxis = list(tickangle = -45))%>% layout(
                      margin = list(b = 5*max(nchar(as.character(data[,1])))) # to fully display the x and y axis labels
                    )
-          })
+        })
       }
     })
-
+  
   # 1.6 Wider Determinants
   observeEvent({input$oneWidDetY
     input$oneWidDetX
     input$oneWidDetGroupBy},ignoreInit = TRUE, {
       if(toLoad$section1 & toLoad$widerDet) {
-
+        
         data <- dat$attributes %>% select_at(input$oneWidDetX) %>% as.data.frame() ## needs to be reconfigured to use bands for continous data
         output$oneWidDetPlot1 <- renderPlotly({clinicPlotSolve(dat, data, input$oneWidDetY, groupLookUp(dat2, input$oneWidDetGroupBy),
                                                                xtitle = makeNice(paste0("Determinant: ", makeNice(input$oneWidDetX %>% removePrefix))),
@@ -1242,12 +1246,12 @@ server <- function(input,output,session){
                                                                guideText = input$oneGeoGroupBy) %>%
             layout(barmode="overlay"#,
                    #xaxis = list(tickangle = -45)
-                   )
-          })
+            )
+        })
       }
     })
-
-
+  
+  
   dataModal <- function() {
     modalDialog(
       HTML("<h2><strong>Definitions and FAQ</strong></h2>"),
@@ -1280,14 +1284,14 @@ server <- function(input,output,session){
       p("ICP: Integrated Care Partnership. Corresponds to Localities"),
       p("LTC: Long Term Conditions"),
       p("POD: Point of Delivery"),
-
+      
       footer = tagList(
         modalButton("OK", icon = NULL)
       ),
       easyClose =TRUE
     )
   }
-
+  
   lapply(c(
     "modalDefinitionCover",
     paste0("viz_help", 1:6),
@@ -1302,14 +1306,14 @@ server <- function(input,output,session){
       showModal( dataModal() )
     })
   })
-
+  
   observeEvent({input$graphDataModalOk
     input$viz_helpClinDataOk
     input$modalDropdownOneDemogOk
     input$section1DefinitionsOk}, {
       removeModal()
     })
-
+  
   #### Modals for graph helptext
   graphModal <- function() {
     modalDialog(
@@ -1327,14 +1331,14 @@ server <- function(input,output,session){
       HTML("<h2><strong>Dropdown Tips</strong></h2>"),
       p("Some dropdowns allow exactly one options, while others allow the user to leave it blank or select multiple options."),
       p("Backspace can be used to remove selected options. In the case of multiple selected options, you can use arrow keys to navigate between selected choices."),
-
+      
       footer = tagList(
         modalButton("OK", icon = NULL)
       ),
       easyClose = TRUE
     )
   }
-
+  
   lapply(paste0("modalGraphInfo",
                 c("",
                   "Cover",
@@ -1356,7 +1360,7 @@ server <- function(input,output,session){
                     showModal( graphModal() )
                   })
                 })
-
+  
   observeEvent(input$modalDropdownOneDemog, {
     showModal(
       modalDialog(
@@ -1366,8 +1370,8 @@ server <- function(input,output,session){
         p("for each unique value of the now split bars."),
         p(strong("3rd dropdown (Counts or % of population): "), "Changes the axis resolution between % and raw count of population."),
         p(strong("4th dropdown (Split bands by condition): "), "Splits each bar by selected condition (those that have the condition, against those who don't). Click on the legend to toggle the visibility of these categories.",
-        "It is recommended the 1st and 4th dropdowns are not used simulatiously (for clarity of plot)."),
-
+          "It is recommended the 1st and 4th dropdowns are not used simulatiously (for clarity of plot)."),
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -1375,7 +1379,7 @@ server <- function(input,output,session){
       )
     )
   })
-
+  
   observeEvent(input$viz_helpActDataCalc, {
     showModal(
       modalDialog(
@@ -1383,7 +1387,7 @@ server <- function(input,output,session){
         p("All activity is first split of Point of Delivery (POD) before being joined with attributes data."),
         p("The data is then split by distinct values of the y-axis field."),
         # p("Please note that per head calculations are per active user: specifically, per individuals in the population with at least 1 recorded activity in the relevant POD."),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -1391,7 +1395,7 @@ server <- function(input,output,session){
       )
     )
   })
-
+  
   observeEvent(input$zeroFilterData, {
     showModal(
       modalDialog(# Data filter
@@ -1400,7 +1404,7 @@ server <- function(input,output,session){
         p("Please note this will take a few seconds for the ExploreR to do."),
         p("Comparison of ICPs is only possible when viewing the entire dataset.",
           "If an ICP is selected, PCNs are used as the defaul geographical unit."),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -1412,14 +1416,14 @@ server <- function(input,output,session){
   observeEvent(input$oneGeneralGetTable, {
     if(!is.null(input$oneGeneralTableFields)) {
       isNotChar <- which(!
-        sapply(input$oneGeneralTableFields, function(x) {
-          is.character(dat$attributes[[x]][1])
-        })
+                           sapply(input$oneGeneralTableFields, function(x) {
+                             is.character(dat$attributes[[x]][1])
+                           })
       )
       
       if(length(isNotChar) > 0) {
         toUse <- input$oneGeneralTableFields[isNotChar]
- # TODO edge case both inputs are the same
+        # TODO edge case both inputs are the same
         # Only do percent for clinical conditions (NOT MISC), otherwise just do mean
         clin <- startsWith(toUse, "clinic.") & !startsWith(toUse, "clinic.misc")
         notclin <- !clin
@@ -1431,7 +1435,7 @@ server <- function(input,output,session){
         
         result2 <- dat$attributes %>% select_at(c(input$oneGeneralTableX, toUse[clin])) %>% group_by_at(input$oneGeneralTableX) %>% 
           summarise(across(where(is.numeric), ~signif(mean(.x, na.rm = TRUE) * 100, digits = 2)) # 
-                    ) %>% as.data.frame()
+          ) %>% as.data.frame()
         
         result1 <- result1 %>% mutate_at(colnames(result1)[-1], as.character) %>% pivot_longer(cols = !input$oneGeneralTableX, names_to = "ValuesNames", values_to = "Values") %>% as.data.frame()
         result1$Percent <- 0
@@ -1446,7 +1450,7 @@ server <- function(input,output,session){
         
         result[[input$oneGeneralTableX]] <- factor(result[[input$oneGeneralTableX]], ordered = TRUE)
         result$ValuesNames <- factor(makeNice(result$ValuesNames), levels = rev(c("Population", makeNice(toUse[notclin]), makeNice(toUse[clin]))))
-
+        
         output$oneGeneralGUI <- renderUI({
           plotOutput("oneGeneralTable", height = paste0(100 + length(toUse) * 40,"px"))
         })
@@ -1508,7 +1512,7 @@ server <- function(input,output,session){
             #     ungroup() %>%
             #     group_by_at(input$twoClusterVar2) %>%
             #     mutate(bnssg_percent = 100*bnssg_freq/sum(bnssg_freq)) %>%
-            #     ungroup() #%>% mutate_at() ## TODO capitalise all segments (and y axis?)
+            #     ungroup() #%>% mutate_at()
             # ),
             # stacked = input$twoClustersegment_layout,
             # percent_or_freq = input$twoClustersegment_percent)
@@ -1519,7 +1523,7 @@ server <- function(input,output,session){
   })
   
   segment_proportion_bars_general <- function(dat2, stacked, percent_or_freq, fill_colours = "default", number_of_columns = 2) {
-
+    
     number_of_segments <- length(unique(dat2[[isolate(input$twoClusterVar1)]]))
     
     segment_colours <- hue_pal()(number_of_segments)
@@ -1576,10 +1580,10 @@ server <- function(input,output,session){
     }
     return(ggplotly(plot,tooltip="text"))
   }
-
   
   
-
+  
+  
   
   segment_proportion_bars_g <- function(dat2, stacked, percent_or_freq, fill_colours = "default", number_of_columns=2, focusName){
     # focusName <- makeNice(focusName)
@@ -1592,7 +1596,7 @@ server <- function(input,output,session){
     } else {
       brewer_pal(type="qual")(number_of_segments)
     }
-# browser()
+    # browser()
     plot_dat <- dat2 %>% 
       mutate(text = if(percent_or_freq=="percent"){
         paste0(round(pcn_percent,2),
@@ -1610,7 +1614,7 @@ server <- function(input,output,session){
     if(!is.numeric(plot_dat[[input$twoClusterVar2]])) {
       plot_dat[[input$twoClusterVar2]]<- makeNice(plot_dat[[input$twoClusterVar2]])
     }
-     
+    
     plot <- plot_dat %>% 
       ggplot(aes(x=factor(focus),
                  y=!!rlang::sym(paste0("pcn_",percent_or_freq)),
@@ -1668,17 +1672,17 @@ server <- function(input,output,session){
       return()
   }
   getBtHGraph_g <- function(dat, dat2, col) {
-      if(col == "") {
-        bridges_to_health_g(dat, NA)
-      } else {
-        bridges_to_health_g(dat, input$twoClusterVar1)
-      }
+    if(col == "") {
+      bridges_to_health_g(dat, NA)
+    } else {
+      bridges_to_health_g(dat, input$twoClusterVar1)
+    }
   }
   
   
   
   
-
+  
   ##############################################
   ##
   ## Tab 2 Segmentation
@@ -1702,7 +1706,7 @@ server <- function(input,output,session){
       ungroup() %>%
       mutate(bnssg_percent = 100*bnssg_freq/sum(bnssg_freq),
              segment = Segment)
-
+    
     output[[n1]] <- renderPlotly({
       plot_ly(
         data = d,
@@ -1767,17 +1771,40 @@ server <- function(input,output,session){
       })
     }
   })
-
+  
   observeEvent(input$clin3x3Plot, {
     source("./functions/3x3plots.R", local = TRUE)
     if(!is.null(input$twoLTCAgeLTCSelection)) {
       data <- getThreeByThreePlotsData(dat$attributes, input)
       dat2$segMem[[1]] <<- paste0(data$g.age, ", ", data$g.complexity)
       output$clin3x3graph <- renderPlot(isolate(getThreeByThreePlots(data, input)))
-
+      
       segGraph(1, dat2, dat, input$two3x3gTreeMapOptions, "two3x3TreeMap", "two3x3Pie", input)
       gc()
-      
+      output$two3x3AddGG <- renderUI({
+        box(width = 12, title = "Add to GlobalGroups",
+            fluidRow(
+              column(width = 6,
+                     textInput("two3x3GGName", "Name:")
+              ),
+              column(width = 3, style = "margin-top: 25px;",
+                     # p(" ", actionLink(inputId = "twoCARTText5",
+                     #                   icon = icon("info-circle"),
+                     #                   label = HTML(""))),
+                     # bsTooltip("twoCARTText5", title = "If the labels overlap, it may be useful to view the rules seperately from the graph. Please note the CART algorithm clusters based on averages of the target variable; these are used to label the leaf nodes."),
+                     
+              ),
+              column(width = 3, style = "margin-top: 25px;",
+                     actionButton("two3x3GGAdd", "Add")
+              )
+            ),
+            fluidRow(
+              column(width = 12,
+                     textOutput("two3x3GGErr")
+              )
+            )
+        )
+      })
     }
   })
   observeEvent(input$two3x3gTreeMapOptions, {
@@ -1787,9 +1814,10 @@ server <- function(input,output,session){
   })
   
   observeEvent(input$two3x3GGAdd, {
+    browser()
     addGraph(1, input$two3x3GGName, "two3x3GGErr", dat, dat2)
   })
-
+  
   observeEvent({input$ltcSelection
     toLoad$section1}, ignoreInit = T, {
       if(toLoad$section1) {
@@ -1805,12 +1833,12 @@ server <- function(input,output,session){
         names(options) = sapply(options, removePrefix) %>% sapply(makeNice)
         updatePickerInput(session, "twoLTCAgeLTCSelection", choices = all, selected = options)
       }
-  })
-
-
+    })
+  
+  
   ############################################
   ## Bridges to Health
-
+  
   source("./functions/segmentationBTHTools.R", local = TRUE)
   observeEvent({
     input$twoBTHsegment_percent
@@ -1829,7 +1857,7 @@ server <- function(input,output,session){
         dat2$segMem[[2]] <<- dat$attributes$util.segmentation.BtHSegment
         segGraph(2, dat2, dat, input$twoBtHTreeMapOptions, "twoBthTreeMap", "twoBthPie") # 1-4 for each seg, then 5 for risk strat
         gc()
-
+        
       }
     }
   })
@@ -1851,17 +1879,17 @@ server <- function(input,output,session){
           footer = tagList()
         )
       )
-       try({
-         add_sco <- function(x){
-           gsub(" ", "_", x, fixed = T)
-         }
+      try({
+        add_sco <- function(x){
+          gsub(" ", "_", x, fixed = T)
+        }
         library(rpart)
         library(rpart.plot)
         print("Libraries loaded")
         data <- as.data.frame(dat$attributes %>% select_at(c(unique(input$twoCARTVar1), input$twoCARTVar2)))
         colnames(data) <- c(sapply(c(unique(input$twoCARTVar1)),makeNice) , input$twoCARTVar2)
         # colnames(data) <- c(sapply(c(unique(input$twoCARTVar1)),removePrefix) %>% sapply(makeNice), input$twoCARTVar2)
-
+        
         # # Error removal disabled; now assume no NAs in code
         # print("CART model NA removal")
         # for(i in colnames(data)) {
@@ -1873,9 +1901,9 @@ server <- function(input,output,session){
         #     }
         #   }
         # }
-
+        # browser()
         print("CART model")
-        model<-rpart(as.formula(paste(input$twoCARTVar2, ".", sep=" ~ ")),data=data,
+        model<-rpart(as.formula(paste("`",input$twoCARTVar2,"`", " ~ .", sep = "")),data=data,
                      control=rpart.control(minbucket=input$twoCARTminbucket,
                                            maxdepth=input$twoCARTmaxdepth,
                                            cp=input$twoCARTcp))
@@ -1883,7 +1911,7 @@ server <- function(input,output,session){
         output$twoCARTTree <- renderPlot({
           rpart.plot(model, type = 3, clip.facs = TRUE, branch = .3, under = TRUE, cex = 1.2,
                      cex.main = 1.4,
-                     main = paste0("Decision Tree \n text in leaves is average ", makeNicePPY(input$twoCARTVar2), " for the leaf; number below is % of population in node\n")
+                     main = paste0("Decision Tree \n text in leaves is average ", makeNice(input$twoCARTVar2), " for the leaf; number below is % of population in node\n")
           )
         })
         dat2$cartModel <<- model
@@ -1894,11 +1922,31 @@ server <- function(input,output,session){
         newSeg <- newIDs[as.character(dat2$cartModel$where)]
         
         dat2$segMem[[3]] <<- newSeg
-
+        
         segGraph(3, dat2, dat, input$twoCARTTreeMapOptions, "twoCARTTreeMap", "twoCARTPie", input) # 1-4 for each seg, then 5 for risk strat
         gc()
         
         updateCheckboxInput(session, "twoCARTTreeRules", value = FALSE)
+        
+        output$twoCARTAddGG <- renderUI({
+          box(width = 12, title = "Add to GlobalGroups",
+              fluidRow(
+                column(width = 6,
+                       textInput("twoCARTGGName", "Reference Name:")
+                ),
+                column(width = 3, style = "margin-top: 25px;"
+                ),
+                column(width = 3, style = "margin-top: 25px;",
+                       actionButton("twoCARTGGAdd", "Add")
+                )
+              ),
+              fluidRow(
+                column(width = 12,
+                       textOutput("twoCARTGGErr")
+                )
+              )
+          )
+        })
       })
       removeModal()
     }
@@ -1913,7 +1961,7 @@ server <- function(input,output,session){
   observeEvent(input$twoCARTGGAdd, {
     addGraph(3, input$twoCARTGGName, "twoCARTGGErr", dat, dat2)
   })
-
+  
   output$twoCARTTreeRulesTableUI <- renderUI({
     if(input$twoCARTTreeRules) {
       column(width = 12,
@@ -1937,7 +1985,7 @@ server <- function(input,output,session){
       })
     }
   })
-
+  
   observeEvent(input$twoCARTInfoD1, {
     showModal(
       modalDialog(
@@ -1950,7 +1998,7 @@ server <- function(input,output,session){
         p("The Decision Tree propagates in a binary fashion where two-way splits are made on the statistically-selected explanatory variables at each
                       level. The statistical rigour of the method ensures an optimal number of segments are returned, i.e. splits are only made which yield
                       meaningful improvements in discrimination (in difference to the other considered methods)."),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -1967,7 +2015,7 @@ server <- function(input,output,session){
         p("Text inside the leaf nodes is the average (mean) target variable (with respect to the individuals in the node). Text below is the % of population in that node."),
         br(),
         p("Please note in some cases labels on the graph may overlap. For this reason, you can toggle a tabel below the tree to show the rules leading to each segment."),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -1975,14 +2023,14 @@ server <- function(input,output,session){
       )
     )
   })
-
+  
   ############################################
   ## Clusters
-
+  
   observeEvent(input$twoClusterGo, {
     if(!is.null(input$twoClusterVars) & length(input$twoClusterVars) >= 1) {
       try({
-      data <- as.data.frame(dat$attributes %>% select_at(c(unique(input$twoClusterVars))))
+        data <- as.data.frame(dat$attributes %>% select_at(c(unique(input$twoClusterVars))))
         if(nrow(data) * ncol(data) > 4*(10^6)) {
           gc()
           showModal(
@@ -1996,12 +2044,12 @@ server <- function(input,output,session){
         } else {
           runC()
         }
-        })
+      })
     }
   })
-
+  
   observeEvent(input$twoKMeansTooManyItems, runC())
-
+  
   runC <- function() {
     {
       showModal(
@@ -2018,7 +2066,7 @@ server <- function(input,output,session){
           gsub(" ", "_", x, fixed = T)
         }
         colnames(data) <- sapply(c(unique(input$twoClusterVars)),add_sco)
-
+        
         print("Cluster NA removal")
         for(i in colnames(data)) {
           if(NA %in% data[[i]]) {
@@ -2032,7 +2080,7 @@ server <- function(input,output,session){
         gc()
         print("Cluster FAMD")
         library(FactoMineR)
-
+        
         # Note here: if every variable is numeric, use normal principal component analysis
         if(length(which(sapply(data, is.numeric))) < ncol(data)) {
           res.famd <- FAMD(data, graph = FALSE, ncp = ncol(data))$ind$coord
@@ -2047,7 +2095,7 @@ server <- function(input,output,session){
         
         
         dat2$segMem[[4]] <<- means$cluster
-
+        
         segGraph(4, dat2, dat, input$twoClusterTreeMapOptions, "twoClusterTreeMap", "twoClusterPie", input) # 1-4 for each seg, then 5 for risk strat
         gc()
         
@@ -2056,6 +2104,25 @@ server <- function(input,output,session){
         output$twoEE <- renderText(result)
       } else {
         output$twoEE <- renderText("")
+        output$twoClusterAddGG <- renderUI({
+          box(width = 12, title = "Add to GlobalGroups",
+              fluidRow(
+                column(width = 6,
+                       textInput("twoClusterGGName", "Refence Name:")
+                ),
+                column(width = 3, style = "margin-top: 25px;"
+                ),
+                column(width = 3, style = "margin-top: 25px;",
+                       actionButton("twoClusterGGAdd", "Add")
+                )
+              ),
+              fluidRow(
+                column(width = 12,
+                       textOutput("twoClusterGGErr")
+                )
+              )
+          )
+        })
       }
       removeModal()
     }
@@ -2069,13 +2136,13 @@ server <- function(input,output,session){
   observeEvent(input$twoClusterGGAdd, {
     addGraph(4, input$twoClusterGGName, "twoClusterGGErr", dat, dat2)
   })
-
+  
   ##############################################
   ##
   ## Tab 3 Cohort Identification
   ##
   ############################################
-
+  
   observeEvent(toLoad$threeCohort, {
     print("dat2$threeCohort$rules")
     if(toLoad$threeCohort) {
@@ -2086,7 +2153,7 @@ server <- function(input,output,session){
         dat2$threeCohort$join <<- list()
         toLoad$threeCohort <<- T
       }
-
+      
       print(dat2$threeCohort$rules)
       updatethreeCohortIDUI(toLoad, input, output, dat2, dat)
     }
@@ -2094,46 +2161,46 @@ server <- function(input,output,session){
   # Add new line option
   observeEvent({input$threeCohortNewUI}, {
     print("Adding new line")
-
+    
     l <- length(dat2$threeCohort$rules)
     freezeReactiveValue(input,"threeCohortNewUI")
     freezeReactiveValue(input, paste0("threeCohortRule",l+1,"Delete"))
-
+    
     dat2$threeCohort$rules[[l+1]] <<- c(dat2$cohortDefaultCols[1],
-        "in (multiple choices select)",
-        dat2$cohortDefaultVals)
-
+                                        "in (multiple choices select)",
+                                        dat2$cohortDefaultVals)
+    
     dat2$threeCohort$join[[l]] <<- "AND"#isolate(input$threeCohortUIandor)
     print(dat2$threeCohort)
     toLoad$threeCohortRules <<- toLoad$threeCohortRules + 1
     if(toLoad$threeCohortRules > toLoad$threeCohortRulesE) {
       toLoad$threeCohortRulesE <<- toLoad$threeCohortRules
     }
-
+    
     updatethreeCohortIDUI(toLoad, input, output, dat2, dat)
-
+    
     updatethreeCohortIDUISelectsFull(toLoad, input, output, dat2)
-
+    
     print("Added new line")
   })
-
-
+  
+  
   updatethreeCohortIDUI <- function(toLoad, input, output, dat2, dat) {
     print("Updating UI")
-
+    
     output$threeCohortUI <- renderUI({
       lapply(1:length(dat2$threeCohort$rules), function(x) {
         s2 <- dat2$threeCohort$rules[[x]][1]
         names(s2) <- s2 %>% removePrefix %>% makeNice
         t <- dat2$groupByList[!is.na(dat2$groupByList)]
         names(t) <- dat2$groupByListText[!is.na(dat2$groupByList)]
-
+        
         t2 <- c("total_cost", "total_act")
         names(t2) <- sapply(c("total_cost", "total_act"),makeNicePPY)
-
+        
         cm <- dat$attributes%>%select(starts_with("clinic.misc")) %>% colnames
         names(cm) <- sapply(cm, removePrefix) %>% sapply(makeNice)
-
+        
         segColNames2 <- list(
           dat2$demogCols[which(dat2$demogCols%in%colnames(dat$attributes))],
           c(cm, dat2$clinicCols),
@@ -2143,7 +2210,7 @@ server <- function(input,output,session){
           t2
         )
         names(segColNames2) <- c("Demographic", "Clinical/LTCs", "Area", "Socio-economic (deprivation)", "GlobalGroups", "Costs and Activity")
-
+        
         fluidRow(
           column(width = 1,
                  paste0("Rule ", x)
@@ -2171,14 +2238,14 @@ server <- function(input,output,session){
       })
     })
   }
-
+  
   updatethreeCohortIDUISelectsFull <- function(toLoad, input, output, dat2) {
     print("Updating every select operator UI, from memory")
     lapply(1:toLoad$threeCohortRules, function(x) {
       renderthreeCohortIDUISelectsX(x, dat, dat2, data, input, output)
     })
   }
-
+  
   renderthreeCohortIDUISelectsX <- function(x, dat, dat2, data, input, output, new = F) {
     print(paste0("Updating select ", x))
     operator <- dat2$threeCohort$rules[[x]][2]
@@ -2206,7 +2273,7 @@ server <- function(input,output,session){
       }
     })
   }
-
+  
   observeEvent(toLoad$threeCohortRulesE, {
     lapply(toLoad$threeCohortRulesE, function(x) {
       observeEvent(input[[paste0("threeCohortSelect",x)]], ignoreInit = T, {
@@ -2225,30 +2292,30 @@ server <- function(input,output,session){
         # Update the available options for this
         renderthreeCohortIDUISelectsX(x, dat, dat2, data, input, output, new = T)
       })
-
+      
       # Wipe memory of selected options - if many from multiple select
       observeEvent(input[[paste0("threeCohort", x,"SelectI")]], ignoreInit = T, {
         print("Adding selected value to memory1")
         dat2$threeCohort$rules[[x]] <<- isolate(c(dat2$threeCohort$rules[[x]][1:2], input[[paste0("threeCohort", x,"SelectI")]]))
       })
-
+      
       observeEvent(input[[paste0("threeCohort", x,"SelectR1")]], ignoreInit = T, {
         print("Adding selected value to memory2")
         dat2$threeCohort$rules[[x]] <<- isolate(c(dat2$threeCohort$rules[[x]][1:2], input[[paste0("threeCohort", x,"SelectR1")]]))
       })
-
+      
       observeEvent(input[[paste0("threeCohort", x,"SelectR2")]], ignoreInit = T, {
         print("Adding selected value to memory3")
         dat2$threeCohort$rules[[x]] <<- isolate(c(dat2$threeCohort$rules[[x]][1:3], input[[paste0("threeCohort", x,"SelectR2")]]))
       })
-
+      
       observeEvent(input[[paste0("threeCohort", x,"SelectC")]], ignoreInit = T, {
         print(paste0("Adding selected value to memory4 ", x))
         dat2$threeCohort$rules[[x]] <<- c(dat2$threeCohort$rules[[x]][1:2],
                                           isolate(input[[paste0("threeCohort", x,"SelectC")]])
         )
       })
-
+      
       observeEvent(input[[paste0("threeCohortRule",x,"Delete")]], ignoreInit = T, {
         if(length(dat2$threeCohort$rules) > 1) {
           print("Deleting a line")
@@ -2270,8 +2337,8 @@ server <- function(input,output,session){
       })
     })
   })
-
-
+  
+  
   observeEvent(input$threeCohortGetIDs,{
     if(input$threeCohortDataFilterOrder != "") {
       x <- str_extract_all(input$threeCohortDataFilterOrder, "[0-9]+|OR|AND|\\(|\\)")[[1]]
@@ -2314,22 +2381,22 @@ server <- function(input,output,session){
     }
   })
   addCohortDownload <- function() {
-      output$threeCohortDownload <- renderUI({
-        list(
-          column(width = 3,
-                 downloadButton("threeCohortDownloadButton", paste0("Download Cohort"))
-          ),
-          column(width = 2,
-                 p(" ", actionLink(inputId = "threeIDText1",
-                                   icon = icon("info-circle"),
-                                   label = HTML(""))),
-                 bsTooltip("threeIDText1", title = "Cohort downloaded is determined by Cohort Name above, not latest cohort added.")
-                 )
+    output$threeCohortDownload <- renderUI({
+      list(
+        column(width = 3,
+               downloadButton("threeCohortDownloadButton", paste0("Download Cohort"))
+        ),
+        column(width = 2,
+               p(" ", actionLink(inputId = "threeIDText1",
+                                 icon = icon("info-circle"),
+                                 label = HTML(""))),
+               bsTooltip("threeIDText1", title = "Cohort downloaded is determined by Cohort Name above, not latest cohort added.")
         )
-      })
-
+      )
+    })
+    
   }
-
+  
   output$threeCohortDownloadButton <- downloadHandler(
     filename = function() {
       paste(input$threeCohortIDName, ".csv", sep = "")
@@ -2338,7 +2405,7 @@ server <- function(input,output,session){
       write.csv(dat$attributes$id[dat$attributes[[paste0("util.cohort.", input$threeCohortIDName)]] == "Yes"], file, col.names = F,row.names = F)
     }
   )
-
+  
   observeEvent(input$threeCohortUploadIdsButton, {
     ext <- tools::file_ext(input$threeCohortUploadIds$datapath)
     if (ext == "csv") {
@@ -2363,7 +2430,7 @@ server <- function(input,output,session){
       }
     }
   })
-
+  
   observeEvent(input$threeCohort1, {
     showModal( modalDialog(
       title = "What is a cohort?",
@@ -2377,16 +2444,16 @@ server <- function(input,output,session){
       easyClose =TRUE
     ))
   })
-
+  
   observeEvent(input$threeCohort2, {
     showModal( modalDialog(
       title = "Creating a cohort",
-
+      
       p("To create a cohort, follow these steps:"),
-
+      
       p("1. Determine what criteria defines the cohort"),
       p("2. Split this criteria into simple statements, such as 'age > 18', and 'has hypertension'"),
-
+      
       p("3. For each of these statements, create a new line (using button 'Add New Rule')."),
       p("4. For each clause, select the appropriate field name, then the values to include in the cohort. There are multiple ways of selecting these values. ",
         "These options can be selected from the dropdown to the right of the field. Details of the operators are at the bottom of this popup."),
@@ -2400,457 +2467,457 @@ server <- function(input,output,session){
       p("'in numeric range' - values of selected field lie between 2 input values. Suitable for numeric data. Uses <= and >="),
       p("'>=' and '<=' - lower/upper limit, respectively"),
       p("'in (multiple choice select)' - multiple values to include. Recommended for non-numeric options. Useful for seeing distinct values of the selected field. Cannot be used if more than 200 unique values are present."),
-
+      
       footer = tagList(
         modalButton("OK", icon = NULL)
       ),
       easyClose =TRUE
     ))
   })
-
+  
   observeEvent(input$threeCohort3, {
     showModal( modalDialog(
       title = "Uploading IDs",
       p("If there is a pre-identified group of interest, IDs can be uploaded via a .csv file."),
       p("This file should contain only a single column of IDs, with no row or column names."),
-
+      
       footer = tagList(
         modalButton("OK", icon = NULL)
       ),
       easyClose =TRUE
     ))
   })
-
- ##############################################
- ##
- ## Tab 4 Theoplot
- #
- ##
- ############################################
-
- source("./functions/theoplots.R", local = TRUE)
- # Theoplot Load
- observeEvent(toLoad$loadTheo, {
-   # On load
-   if(toLoad$loadTheo) {
-     print("Theoplot Load")
+  
+  ##############################################
+  ##
+  ## Tab 4 Theoplot
+  #
+  ##
+  ############################################
+  
+  source("./functions/theoplots.R", local = TRUE)
+  # Theoplot Load
+  observeEvent(toLoad$loadTheo, {
+    # On load
+    if(toLoad$loadTheo) {
+      print("Theoplot Load")
+      # browser()
+      # dat2$actLookUp$id[1:20]
+      updateDateRangeInput(session, "fourTheoDate", start = dat2$mintime, end = dat2$maxtime)
+      updateDateRangeInput(session, "dateidMulti", start = dat2$mintime, end = dat2$maxtime)
+      
+      t <- dat2$groupByList[!is.na(dat2$groupByList)]
+      names(t) <- dat2$groupByListText[!is.na(dat2$groupByList)]
+      updatePickerInput(session, "fourTheoSingleGlobalGroup", choices = t)
+      updatePickerInput(session, "fourTheoMultiGlobalGroup", choices = t)
+      
+      tree <- getTree(dat2$theorows%>%as.data.frame())
+      output$fourTheoMultiActivityToPlot <- renderTree({
+        tree
+      })
+      output$fourTheotree <- renderTree({
+        for(i in 1:length(tree)) {
+          attr(tree[[i]],"stselected")=TRUE
+        }
+        tree
+      })
+      
+      updateSliderInput(session, "fourTheoFilterLTCSlider", min = 0, max = max(dat$attributes[[dat2$ltc]]), value = c(0, max(dat$attributes[[dat2$ltc]])))
+      updateSliderInput(session, "fourTheoFilterLTCSliderMulti", min = 0, max = max(dat$attributes[[dat2$ltc]]), value = c(0, max(dat$attributes[[dat2$ltc]])))
+      
+      sample_nhs_num <- dat$attributes %>%
+        filter(.data[[dat2$age]] <= 100 & .data[[dat2$age]] >= 10,
+               .data[[dat2$ltc]] >= 0 & .data[[dat2$ltc]] <= max(dat$attributes[[dat2$ltc]])) %>%
+        dplyr::sample_n(size = 1) %>%  dplyr::pull(id)
+      
+      if(length(sample_nhs_num) == 0){
+        print("Error: no patients in this category")
+      } else {
+        # updateTextInput(inputId = "fourTheoID", session = session, value = sample_nhs_num)
+        output$figureplotly <- renderPlotly(plotPatientActivityPlotly2(theoData(sample_nhs_num, dat, dat2), dat2, input$fourTheoDate))
+      }
+      output$fourTheoMultiPlotText <- renderText({"No activity type selected to be plotted (Setup above)."})
+      
+      # # will need to do something about input here - how to colour, etc.
+      # plotMultiLineTheo(dat, dat2, input,
+      #                   dat2$actLookUp$id[1:20]
+      # )
+    }
+  })
+  
+  ###############################
+  # Single Theoplot
+  
+  observeEvent(input$fourTheoSingleGlobalGroup, ignoreInit = T, {
+    print("Valeus update")
+    updatePickerInput(session, "fourTheoSingleGlobalGroupValues", choices = sort(unique(as.character(dat$attributes[[input$fourTheoSingleGlobalGroup]]))))
+  })
+  
+  observeEvent(input$fourTheoSingleGlobalGroupGo, {
+    if(!is.null(input$fourTheoSingleGlobalGroupValues)) {
+      sample_nhs_num <- dat$attributes %>%
+        filter(.data[[input$fourTheoSingleGlobalGroup]] %in% input$fourTheoSingleGlobalGroupValues) %>%
+        dplyr::sample_n(size = min(1, nrow(.))) %>%
+        dplyr::pull(id)
+      if(length(sample_nhs_num) == 0){
+        # Error handle
+        output$fourTheoSingleErr <- renderText({paste0("Could not find anyone in data with selected attributes, request at ", Sys.time())})
+        output$figureplotly <- renderPlotly({
+          plotly_empty()
+        })
+      } else {
+        output$fourTheoSingleErr <- renderText(" ")
+        output$figureplotly <- renderPlotly(plotPatientActivityPlotly2(theoData(sample_nhs_num, dat, dat2),dat2,input$fourTheoDate))
+      }
+    }
+  })
+  
+  # Options tab 2 (By filter)
+  observeEvent(input$fourTheoFilterGo, {
+    sample_nhs_num <- dat$attributes %>%
+      filter(.data[[dat2$age]] <= input$fourTheoFilterAgeSlider[2] & .data[[dat2$age]] >= input$fourTheoFilterAgeSlider[1],
+             .data[[dat2$ltc]] >= input$fourTheoFilterLTCSlider[1] & .data[[dat2$ltc]] <= input$fourTheoFilterLTCSlider[2]) %>%
+      dplyr::sample_n(size = min(nrow(.),1)) %>%
+      dplyr::pull(id)
+    if(length(sample_nhs_num) == 0){
+      # Error handle
+      output$fourTheoSingleErr <- renderText({paste0("Could not find anyone in data with selected attributes, request at ", Sys.time())})
+      output$figureplotly <- renderPlotly({
+        plotly_empty()
+      })
+    } else {
+      output$fourTheoSingleErr <- renderText(" ")
+      output$figureplotly <- renderPlotly(plotPatientActivityPlotly2(theoData(sample_nhs_num, dat, dat2),dat2,input$fourTheoDate))
+    }
+  })
+  
+  
+  
+  ###############################
+  # Options tab 3 (File Upload)
+  observeEvent(input$theoFileInput, {
+    ext <- tools::file_ext(input$theoFileInput$datapath)
     # browser()
-    # dat2$actLookUp$id[1:20]
-     updateDateRangeInput(session, "fourTheoDate", start = dat2$mintime, end = dat2$maxtime)
-     updateDateRangeInput(session, "dateidMulti", start = dat2$mintime, end = dat2$maxtime)
-
-     t <- dat2$groupByList[!is.na(dat2$groupByList)]
-     names(t) <- dat2$groupByListText[!is.na(dat2$groupByList)]
-     updatePickerInput(session, "fourTheoSingleGlobalGroup", choices = t)
-     updatePickerInput(session, "fourTheoMultiGlobalGroup", choices = t)
-
-     tree <- getTree(dat2$theorows%>%as.data.frame())
-     output$fourTheoMultiActivityToPlot <- renderTree({
-       tree
-     })
-     output$fourTheotree <- renderTree({
-       for(i in 1:length(tree)) {
-         attr(tree[[i]],"stselected")=TRUE
-       }
-       tree
-     })
-
-     updateSliderInput(session, "fourTheoFilterLTCSlider", min = 0, max = max(dat$attributes[[dat2$ltc]]), value = c(0, max(dat$attributes[[dat2$ltc]])))
-     updateSliderInput(session, "fourTheoFilterLTCSliderMulti", min = 0, max = max(dat$attributes[[dat2$ltc]]), value = c(0, max(dat$attributes[[dat2$ltc]])))
-
-     sample_nhs_num <- dat$attributes %>%
-       filter(.data[[dat2$age]] <= 100 & .data[[dat2$age]] >= 10,
-              .data[[dat2$ltc]] >= 0 & .data[[dat2$ltc]] <= max(dat$attributes[[dat2$ltc]])) %>%
-       dplyr::sample_n(size = 1) %>%  dplyr::pull(id)
-
-     if(length(sample_nhs_num) == 0){
-       print("Error: no patients in this category")
-     } else {
-       # updateTextInput(inputId = "fourTheoID", session = session, value = sample_nhs_num)
-       output$figureplotly <- renderPlotly(plotPatientActivityPlotly2(theoData(sample_nhs_num, dat, dat2), dat2, input$fourTheoDate))
-     }
-     output$fourTheoMultiPlotText <- renderText({"No activity type selected to be plotted (Setup above)."})
-
-# # will need to do something about input here - how to colour, etc.
-     # plotMultiLineTheo(dat, dat2, input,
-     #                   dat2$actLookUp$id[1:20]
-     # )
-   }
- })
-
- ###############################
- # Single Theoplot
-
- observeEvent(input$fourTheoSingleGlobalGroup, ignoreInit = T, {
-   print("Valeus update")
-   updatePickerInput(session, "fourTheoSingleGlobalGroupValues", choices = sort(unique(as.character(dat$attributes[[input$fourTheoSingleGlobalGroup]]))))
- })
-
- observeEvent(input$fourTheoSingleGlobalGroupGo, {
-   if(!is.null(input$fourTheoSingleGlobalGroupValues)) {
-     sample_nhs_num <- dat$attributes %>%
-       filter(.data[[input$fourTheoSingleGlobalGroup]] %in% input$fourTheoSingleGlobalGroupValues) %>%
-       dplyr::sample_n(size = min(1, nrow(.))) %>%
-       dplyr::pull(id)
-     if(length(sample_nhs_num) == 0){
-       # Error handle
-       output$fourTheoSingleErr <- renderText({paste0("Could not find anyone in data with selected attributes, request at ", Sys.time())})
-       output$figureplotly <- renderPlotly({
-         plotly_empty()
-       })
-     } else {
-       output$fourTheoSingleErr <- renderText(" ")
-       output$figureplotly <- renderPlotly(plotPatientActivityPlotly2(theoData(sample_nhs_num, dat, dat2),dat2,input$fourTheoDate))
-     }
-   }
- })
-
- # Options tab 2 (By filter)
- observeEvent(input$fourTheoFilterGo, {
-     sample_nhs_num <- dat$attributes %>%
-       filter(.data[[dat2$age]] <= input$fourTheoFilterAgeSlider[2] & .data[[dat2$age]] >= input$fourTheoFilterAgeSlider[1],
-              .data[[dat2$ltc]] >= input$fourTheoFilterLTCSlider[1] & .data[[dat2$ltc]] <= input$fourTheoFilterLTCSlider[2]) %>%
-       dplyr::sample_n(size = min(nrow(.),1)) %>%
-       dplyr::pull(id)
-     if(length(sample_nhs_num) == 0){
-       # Error handle
-       output$fourTheoSingleErr <- renderText({paste0("Could not find anyone in data with selected attributes, request at ", Sys.time())})
-       output$figureplotly <- renderPlotly({
-         plotly_empty()
-       })
-     } else {
-       output$fourTheoSingleErr <- renderText(" ")
-       output$figureplotly <- renderPlotly(plotPatientActivityPlotly2(theoData(sample_nhs_num, dat, dat2),dat2,input$fourTheoDate))
-     }
- })
-
-
-
- ###############################
- # Options tab 3 (File Upload)
- observeEvent(input$theoFileInput, {
-   ext <- tools::file_ext(input$theoFileInput$datapath)
-   # browser()
-   if (ext == "csv") {
-     dat2$theoFile <<- read.csv(input$theoFileInput$datapath,stringsAsFactors = F, header = F)
-     # Need: 1st column to be integer, 2nd and 3rd date, 4th date?
-     n <- ncol(dat2$theoFile)
-     if(n > 4 | n < 1) {
-       output$theoFileUI <- renderUI({p("Something went wrong while loading the file.")})
-       # throw exception - unrecognised format
-     } else {
-       # Handle file
-       # Assume columns contain correct data types
-       dat2$theoFile <<- as.data.frame(dat2$theoFile[dat2$theoFile[,1]%in%dat2$actLookUp$id,])
-
-       if(n > 1) {
-         for(i in 2:n) {
-           dat2$theoFile[,i] <<- ymd(dat2$theoFile[,i])
-           if(!is.Date(dat2$theoFile[,i])) {
-             print("Not Date")
-             # browser()
-           }
-         }
-       }
-       if(nrow(dat2$theoFile) > 0) {
-         output$theoFileUI <- renderUI({
-           fluidRow(
-             column(width = 12,
-                    br(),
-                    selectInput("fourTheoFileSearchID", "Select ID:", choices = dat2$theoFile[,1]),
-                    textInput("fourTheoFileID", "Type to Select:", value = dat2$theoFile[,1][1]),
-                    column(width = 4,
-                           actionButton("fourTheoFileGo", HTML("Plot")),
-                    )
-             )
-           )
-         })
-       } else {
-         output$theoFileUI <- renderUI({p("Could not find valid individuals.")})
-       }
-       print("File Uploaded")
-     }
-   }
- })
-
- observeEvent(input$fourTheoFileGo, {
-   # Need to add a vertical line at dat2$theoFile[,4] (if exists)
-   # And scale graph to (dat2$theoFile[,2:3])
-   # times <- dat2$theoFile[dat2$theoFile[,1] == input$fourTheoFileID,2:3]
-   if(input$fourTheoFileID %in% dat$attributes$id) {
-     output$figureplotly <- renderPlotly(
-       plotPatientActivityPlotly2(theoData(isolate(input$fourTheoFileID), dat, dat2)
-                                  ,dat2,input$fourTheoDate))
-   } else {
-     output$figureplotly <- renderPlotly(plotly_empty())
-     output$fourTheoSingleTheoAttributes <- renderText({"Selected individual not found in data."})
-   }
-   freezeReactiveValue(input, "fourTheoFileGo")
- })
- observeEvent(input$fourTheoFileSearchID, {
-   updateTextInput(session, "fourTheoFileID", value = input$fourTheoFileSearchID)
-   freezeReactiveValue(input, "fourTheoFileID")
- })
-
- # Messages for single theoplots
- observeEvent(input$fourTheoSingleInfo1, {
-   showModal(
-     modalDialog(
-       title = "Using Theoplots",
-
-       p("This page provides theoplots for individuals. For group/aggregated theoplots, click the 'Group Theoplot' tab above."),
-
-       p("To get started, select the data range of interest (or leave as default). Historic data, beyond the initial date may be present. Then, use one of the tabs below to select an individual, and click plot."),
-       p("The expandable tree to the right of this box shows the activity types available. Untick boxes to remove the corresponding activitise from the graph."),
-       p("The Attributes section in the bottom right shows some additional information about the selected individual."),
-       p("The Activity section in the bottom center shows the raw data being plotted. This feature may be removed in the final release."),
-
-       p("Plots can be saved by clicking the camera icon when hovering over the graph. By using the tool, you agree to keep any and all screenshots and images confidential in",
-         " line with IG rules."),
-       br(),
-       p("Please note pseudo-IDs have been removed from the graphs to ensure an anomymous output. Individuals fitting the criteria are randomly sampled from the population."),
-       br(),
-       hr(),
-       p(strong("Plot tips:"), "Theoplots are interactive - select an area to zoom in,
-                   or hover over activity to see if there is more information available.
-                   Double click on plot to return to default plot. Explore the navigation
-                   tools that appear at the top right of the plot."),
-       p("Please note lines (activity with duration) does not have hovertext, and can be coloured wrong. To see details, find the end points, which will have the relevant information in the hovertext."),
-       # p("To upload IDs."),
-       footer = tagList(
-         modalButton("OK", icon = NULL)
-       ),
-       easyClose =TRUE
-     )
-   )
- })
-
-
- #############################
- # Multiline Theoplots
- observeEvent(input$fourTheoMultiGlobalGroupGo, {
-   plotMultiLineTheo(dat, dat2, input,
-                     dat$attributes %>%
-                       filter(.data[[input$fourTheoMultiGlobalGroup]] %in% input$fourTheoMultiGlobalGroupValues) %>%
-                       dplyr::sample_n(size = min(input$fourTheoMultiPatentNum, nrow(.))) %>%
-                       dplyr::pull(id)
-   )
- })
- observeEvent(input$fourTheoMultiGlobalGroup, ignoreInit = T, {
-  # # I mis-spelled values
-  #  print("Valeus update")
-   updatePickerInput(session, "fourTheoMultiGlobalGroupValues", choices = sort(unique(as.character(dat$attributes[[input$fourTheoMultiGlobalGroup]]))))
- })
-
- observeEvent(input$fourTheoFilterGoMulti, {
-   plotMultiLineTheo(dat, dat2, input,
-                     dat$attributes %>%
-                       filter(.data[[dat2$age]] <= input$fourTheoFilterAgeSliderMulti[2] & .data[[dat2$age]] >= input$fourTheoFilterAgeSliderMulti[1],
-                              .data[[dat2$ltc]] >= input$fourTheoFilterLTCSliderMulti[1] & .data[[dat2$ltc]] <= input$fourTheoFilterLTCSliderMulti[2]) %>%
-                       dplyr::sample_n(size = min(input$fourTheoMultiPatentNum, nrow(.))) %>%
-                       dplyr::pull(id)
+    if (ext == "csv") {
+      dat2$theoFile <<- read.csv(input$theoFileInput$datapath,stringsAsFactors = F, header = F)
+      # Need: 1st column to be integer, 2nd and 3rd date, 4th date?
+      n <- ncol(dat2$theoFile)
+      if(n > 4 | n < 1) {
+        output$theoFileUI <- renderUI({p("Something went wrong while loading the file.")})
+        # throw exception - unrecognised format
+      } else {
+        # Handle file
+        # Assume columns contain correct data types
+        dat2$theoFile <<- as.data.frame(dat2$theoFile[dat2$theoFile[,1]%in%dat2$actLookUp$id,])
+        
+        if(n > 1) {
+          for(i in 2:n) {
+            dat2$theoFile[,i] <<- ymd(dat2$theoFile[,i])
+            if(!is.Date(dat2$theoFile[,i])) {
+              print("Not Date")
+              # browser()
+            }
+          }
+        }
+        if(nrow(dat2$theoFile) > 0) {
+          output$theoFileUI <- renderUI({
+            fluidRow(
+              column(width = 12,
+                     br(),
+                     selectInput("fourTheoFileSearchID", "Select ID:", choices = dat2$theoFile[,1]),
+                     textInput("fourTheoFileID", "Type to Select:", value = dat2$theoFile[,1][1]),
+                     column(width = 4,
+                            actionButton("fourTheoFileGo", HTML("Plot")),
                      )
- })
-
- # Upload a file
- observeEvent(input$theoFileInputMulti, {
-   ext <- tools::file_ext(input$theoFileInputMulti$datapath)
-   # browser()
-   if (ext == "csv") {
-     dat2$theoFileMulti <<- read.csv(input$theoFileInputMulti$datapath,stringsAsFactors = F)
-     # Need: 1st column to be integer, 2nd and 3rd date, 4th date?
-     n <- ncol(dat2$theoFileMulti)
-     if(n > 4 | n < 1) {
-       output$theoFileUIMulti <- renderUI({p("Something went wrong while loading the file.")})
-       # throw exception - unrecognised format
-     } else {
-       # Handle file
-       # Assume columns contain correct data types
-       dat2$theoFileMulti <<- as.data.frame(dat2$theoFileMulti[dat2$theoFileMulti[,1]%in%dat2$actLookUp$id,])
-       if(n > 1) {
-         for(i in 2:n) {
-           dat2$theoFileMulti[,i] <<- ymd(dat2$theoFileMulti[,i])
-           if(!is.Date(dat2$theoFileMulti[,i])) {
-             print("Not Date")
-           }
-         }
-       }
-       if(nrow(dat2$theoFileMulti) > 0) {
-         output$theoFileUIMulti <- renderUI({
-           fluidRow(
-             column(width = 12,
-                    br(),
-                    selectInput("fourTheoFileSearchIDMulti", "IDs uploaded:", choices = dat2$theoFileMulti[,1]),
-                    column(width = 4,
-                           actionButton("fourTheoFileGoMulti", HTML("Sample & Plot!")),
-                    ),
-             )
-           )
-         })
-       } else {
-         output$theoFileUIMulti <- renderUI({p("Could not find valid individuals.")})
-       }
-       print("File Uploaded")
-     }
-   }
- })
-
- observeEvent(input$fourTheoFileGoMulti, {
-   plotMultiLineTheo(dat, dat2, input,
-                     sample(dat2$theoFileMulti[,1], min(length(dat2$theoFileMulti[,1]), input$fourTheoMultiPatentNum))
-   )
-
-   freezeReactiveValue(input, "fourTheoFileGo")
- })
-
- observeEvent(input$fourTheoMultiInfo1, {
-   showModal(
-     modalDialog(
-       title = "Using Theoplots",
-
-       p("This page provides group/aggregated theoplots. For individual theoplots, click the 'Single Theoplot' tab above."),
-
-       p("To get started, select the data range of interest (or leave as default). Historic data, beyond the initial date may be present."),
-       p("To select the activity type(s) to plot, please go to the 'Options' tab. Expand the tree as required, and select activity type(s) of interest.",
-         " This will create a table, in which colours can be specified for each activity type. Please note the behaviour of this table can be odd at times."),
-       p("Colour is inherited by sublevels. Expanding the tree will expand the table and allow colour choices for sublevels."),
-       p("Once activity is selected, use the tabs on the left to specifying how many individuals you would like sampled, and by what criteria."),
-       p("The plotting itself may take a while if a large number of individuals are selected."),
-       p("Select the 'Theoplot' tab to view the plot once it has rendered."),
-       br(),
-       p("Plots can be saved by clicking the camera icon when hovering over the graph. By using the tool, you agree to keep any and all screenshots and images confidential in",
-         " line with IG rules."),
-       br(),
-       p("Group theoplots are designed to allow comparisons of patient journeys."),
-       br(),
-       p("Please note pseudo-IDs have been removed from the graphs to ensure an anomymous output. Individuals fitting the criteria are randomly sampled from the population."),
-       br(),
-       hr(),
-       p(strong("Plot tips:"), "Theoplots are interactive - select an area to zoom in,
+              )
+            )
+          })
+        } else {
+          output$theoFileUI <- renderUI({p("Could not find valid individuals.")})
+        }
+        print("File Uploaded")
+      }
+    }
+  })
+  
+  observeEvent(input$fourTheoFileGo, {
+    # Need to add a vertical line at dat2$theoFile[,4] (if exists)
+    # And scale graph to (dat2$theoFile[,2:3])
+    # times <- dat2$theoFile[dat2$theoFile[,1] == input$fourTheoFileID,2:3]
+    if(input$fourTheoFileID %in% dat$attributes$id) {
+      output$figureplotly <- renderPlotly(
+        plotPatientActivityPlotly2(theoData(isolate(input$fourTheoFileID), dat, dat2)
+                                   ,dat2,input$fourTheoDate))
+    } else {
+      output$figureplotly <- renderPlotly(plotly_empty())
+      output$fourTheoSingleTheoAttributes <- renderText({"Selected individual not found in data."})
+    }
+    freezeReactiveValue(input, "fourTheoFileGo")
+  })
+  observeEvent(input$fourTheoFileSearchID, {
+    updateTextInput(session, "fourTheoFileID", value = input$fourTheoFileSearchID)
+    freezeReactiveValue(input, "fourTheoFileID")
+  })
+  
+  # Messages for single theoplots
+  observeEvent(input$fourTheoSingleInfo1, {
+    showModal(
+      modalDialog(
+        title = "Using Theoplots",
+        
+        p("This page provides theoplots for individuals. For group/aggregated theoplots, click the 'Group Theoplot' tab above."),
+        
+        p("To get started, select the data range of interest (or leave as default). Historic data, beyond the initial date may be present. Then, use one of the tabs below to select an individual, and click plot."),
+        p("The expandable tree to the right of this box shows the activity types available. Untick boxes to remove the corresponding activitise from the graph."),
+        p("The Attributes section in the bottom right shows some additional information about the selected individual."),
+        p("The Activity section in the bottom center shows the raw data being plotted. This feature may be removed in the final release."),
+        
+        p("Plots can be saved by clicking the camera icon when hovering over the graph. By using the tool, you agree to keep any and all screenshots and images confidential in",
+          " line with IG rules."),
+        br(),
+        p("Please note pseudo-IDs have been removed from the graphs to ensure an anomymous output. Individuals fitting the criteria are randomly sampled from the population."),
+        br(),
+        hr(),
+        p(strong("Plot tips:"), "Theoplots are interactive - select an area to zoom in,
                    or hover over activity to see if there is more information available.
                    Double click on plot to return to default plot. Explore the navigation
                    tools that appear at the top right of the plot."),
-       footer = tagList(
-         modalButton("OK", icon = NULL)
-       ),
-       easyClose =TRUE
-     )
-   )
- })
-
- ###############################################################
-
- # Colour mapping for activity
- observeEvent(input$fourTheoMultiActivityToPlot, {
-   selected <- getSelectedShinyTreeValues(dat2, input$fourTheoMultiActivityToPlot)
-   ntree <- selected[[2]]
-   treeCols <- selected[[3]]
-   selected <- selected[[1]]
-
-   if(length(treeCols) > 0) {
-     # In short, grabs the list of entries to assign colours to
-     # all the ancestor values are for tracking which are expanded in the tree, and which aren't
-     t <- sapply(1:nrow(ntree), function(i) {
-       removeScores(ntree[i,]) %>% paste0(collapse = ".")
-     })
-
-     allCols <- get_selected(input$fourTheoMultiActivityToPlot, format = "names") %>%
-       lapply(function(x){
-         paste0(c(attr(x, "ancestry"), x[1]), collapse = ".")
-       })%>%
-       unlist()
-     isOpen <- lapply(get_selected(input$fourTheoMultiActivityToPlot, format = "names"), function(x){
-       if(is.null(attr(x, "stopened"))) {
-         F
-       } else {
-         T
-       }
-     })%>%unlist()
-
-     hasNoAncestor <- lapply(get_selected(input$fourTheoMultiActivityToPlot, format = "names"), function(x) {
-       if(length(attr(x, "ancestry")) > 0) {
-         F
-       } else {
-         T
-       }
-     })%>%unlist()
-
-     hasOpenAncestor <- lapply(get_selected(input$fourTheoMultiActivityToPlot, format = "names"), function(x) {
-       y <- paste0(c(attr(x, "ancestry")), collapse = ".")
-       # browser()
-       if(y == "") {
-         F
-       } else {
-         # toR <- isOpen[which(allCols == y)]
-         if(!y%in%allCols) {
-           T
-         } else {
-           isOpen[which(allCols == y)]
-         }
-
-       }
-     }) %>% unlist()
-     #      is closed AND (no ancestor OR has open ancestor) # closed = NOT open
-
-     actualCols <- allCols[(!isOpen & hasNoAncestor) | (!isOpen & hasOpenAncestor)]
-
-   }
-
-   if(length(treeCols) > 0) {
-     # browser()
-     dat2$multiTheoColSNum <<- dat2$multiTheoColSNum+1
-     dat2$multiTheoColS <<- actualCols
-
-     selected <- gsub(" ", "_", actualCols, fixed = T) %>% gsub("_", ".",.) # selected
-     cols <- c("green", "blue", "yellow", "black", "red", "grey")
-     if(length(selected) == 1) {
-       x <- data.frame(t(c(selected, 1:6))) %>% as.data.table()
-     } else {
-       x <- cbind(selected, sapply(1:length(cols), function(x) {rep(x,length(selected))})) %>% as.data.table()
-     }
-
-     colnames(x) <- c("Activity", cols)
-
-     x <- x %>% mutate(check = sapply(x$Activity%>%as.character, function(y) {
-       y <- paste0(y, paste0(rep("a",dat2$multiTheoColSNum-1), collapse = ""))
-       if(!is.null(input[[y]])) {input[[y]]} else {4}
-     })
-     )
-     # Format names of table entries, and map in radio buttons
-     x <- cbind(data.frame(Activity_Name = x$Activity),x) %>% mutate(Activity_Name = gsub(".", "<br>", Activity_Name, fixed = T),
-                                                                     Activity = paste0(Activity, paste0(rep("a",dat2$multiTheoColSNum), collapse = ""))
-     ) %>%
-       mutate(across(cols, function(x) {sprintf('<input type="radio" name="%s" value="%s" %s/>', Activity, `x`, ifelse(`x`==`check`,"checked" ,""))}) )
-     output$fourTheoMultiActivityToPlotColours <- renderUI({
-       column(width = 12, fluidRow(style = "overflow-x: scroll;",
-                                   DT::dataTableOutput('multiTheoColours'),
-                                   verbatimTextOutput('sel')
-       )
-       )
-     })
-
-     x <- as.data.table(x)
-     # Remove field used to select which entry is selected i neach row, then render the table
-     x[ ,`:=`(check = NULL)]
-     output$multiTheoColours = DT::renderDataTable(
-       x, escape = FALSE, selection = 'none', server = FALSE, rownames=FALSE,
-       options = list(dom = 't', paging = FALSE, ordering = FALSE, columnDefs = list(list(visible=FALSE, targets=c(1)))), # options=list()
-       callback = JS("table.rows().every(function(i, tab, row) {
+        p("Please note lines (activity with duration) does not have hovertext, and can be coloured wrong. To see details, find the end points, which will have the relevant information in the hovertext."),
+        # p("To upload IDs."),
+        footer = tagList(
+          modalButton("OK", icon = NULL)
+        ),
+        easyClose =TRUE
+      )
+    )
+  })
+  
+  
+  #############################
+  # Multiline Theoplots
+  observeEvent(input$fourTheoMultiGlobalGroupGo, {
+    plotMultiLineTheo(dat, dat2, input,
+                      dat$attributes %>%
+                        filter(.data[[input$fourTheoMultiGlobalGroup]] %in% input$fourTheoMultiGlobalGroupValues) %>%
+                        dplyr::sample_n(size = min(input$fourTheoMultiPatentNum, nrow(.))) %>%
+                        dplyr::pull(id)
+    )
+  })
+  observeEvent(input$fourTheoMultiGlobalGroup, ignoreInit = T, {
+    # # I mis-spelled values
+    #  print("Valeus update")
+    updatePickerInput(session, "fourTheoMultiGlobalGroupValues", choices = sort(unique(as.character(dat$attributes[[input$fourTheoMultiGlobalGroup]]))))
+  })
+  
+  observeEvent(input$fourTheoFilterGoMulti, {
+    plotMultiLineTheo(dat, dat2, input,
+                      dat$attributes %>%
+                        filter(.data[[dat2$age]] <= input$fourTheoFilterAgeSliderMulti[2] & .data[[dat2$age]] >= input$fourTheoFilterAgeSliderMulti[1],
+                               .data[[dat2$ltc]] >= input$fourTheoFilterLTCSliderMulti[1] & .data[[dat2$ltc]] <= input$fourTheoFilterLTCSliderMulti[2]) %>%
+                        dplyr::sample_n(size = min(input$fourTheoMultiPatentNum, nrow(.))) %>%
+                        dplyr::pull(id)
+    )
+  })
+  
+  # Upload a file
+  observeEvent(input$theoFileInputMulti, {
+    ext <- tools::file_ext(input$theoFileInputMulti$datapath)
+    # browser()
+    if (ext == "csv") {
+      dat2$theoFileMulti <<- read.csv(input$theoFileInputMulti$datapath,stringsAsFactors = F)
+      # Need: 1st column to be integer, 2nd and 3rd date, 4th date?
+      n <- ncol(dat2$theoFileMulti)
+      if(n > 4 | n < 1) {
+        output$theoFileUIMulti <- renderUI({p("Something went wrong while loading the file.")})
+        # throw exception - unrecognised format
+      } else {
+        # Handle file
+        # Assume columns contain correct data types
+        dat2$theoFileMulti <<- as.data.frame(dat2$theoFileMulti[dat2$theoFileMulti[,1]%in%dat2$actLookUp$id,])
+        if(n > 1) {
+          for(i in 2:n) {
+            dat2$theoFileMulti[,i] <<- ymd(dat2$theoFileMulti[,i])
+            if(!is.Date(dat2$theoFileMulti[,i])) {
+              print("Not Date")
+            }
+          }
+        }
+        if(nrow(dat2$theoFileMulti) > 0) {
+          output$theoFileUIMulti <- renderUI({
+            fluidRow(
+              column(width = 12,
+                     br(),
+                     selectInput("fourTheoFileSearchIDMulti", "IDs uploaded:", choices = dat2$theoFileMulti[,1]),
+                     column(width = 4,
+                            actionButton("fourTheoFileGoMulti", HTML("Sample & Plot!")),
+                     ),
+              )
+            )
+          })
+        } else {
+          output$theoFileUIMulti <- renderUI({p("Could not find valid individuals.")})
+        }
+        print("File Uploaded")
+      }
+    }
+  })
+  
+  observeEvent(input$fourTheoFileGoMulti, {
+    plotMultiLineTheo(dat, dat2, input,
+                      sample(dat2$theoFileMulti[,1], min(length(dat2$theoFileMulti[,1]), input$fourTheoMultiPatentNum))
+    )
+    
+    freezeReactiveValue(input, "fourTheoFileGo")
+  })
+  
+  observeEvent(input$fourTheoMultiInfo1, {
+    showModal(
+      modalDialog(
+        title = "Using Theoplots",
+        
+        p("This page provides group/aggregated theoplots. For individual theoplots, click the 'Single Theoplot' tab above."),
+        
+        p("To get started, select the data range of interest (or leave as default). Historic data, beyond the initial date may be present."),
+        p("To select the activity type(s) to plot, please go to the 'Options' tab. Expand the tree as required, and select activity type(s) of interest.",
+          " This will create a table, in which colours can be specified for each activity type. Please note the behaviour of this table can be odd at times."),
+        p("Colour is inherited by sublevels. Expanding the tree will expand the table and allow colour choices for sublevels."),
+        p("Once activity is selected, use the tabs on the left to specifying how many individuals you would like sampled, and by what criteria."),
+        p("The plotting itself may take a while if a large number of individuals are selected."),
+        p("Select the 'Theoplot' tab to view the plot once it has rendered."),
+        br(),
+        p("Plots can be saved by clicking the camera icon when hovering over the graph. By using the tool, you agree to keep any and all screenshots and images confidential in",
+          " line with IG rules."),
+        br(),
+        p("Group theoplots are designed to allow comparisons of patient journeys."),
+        br(),
+        p("Please note pseudo-IDs have been removed from the graphs to ensure an anomymous output. Individuals fitting the criteria are randomly sampled from the population."),
+        br(),
+        hr(),
+        p(strong("Plot tips:"), "Theoplots are interactive - select an area to zoom in,
+                   or hover over activity to see if there is more information available.
+                   Double click on plot to return to default plot. Explore the navigation
+                   tools that appear at the top right of the plot."),
+        footer = tagList(
+          modalButton("OK", icon = NULL)
+        ),
+        easyClose =TRUE
+      )
+    )
+  })
+  
+  ###############################################################
+  
+  # Colour mapping for activity
+  observeEvent(input$fourTheoMultiActivityToPlot, {
+    selected <- getSelectedShinyTreeValues(dat2, input$fourTheoMultiActivityToPlot)
+    ntree <- selected[[2]]
+    treeCols <- selected[[3]]
+    selected <- selected[[1]]
+    
+    if(length(treeCols) > 0) {
+      # In short, grabs the list of entries to assign colours to
+      # all the ancestor values are for tracking which are expanded in the tree, and which aren't
+      t <- sapply(1:nrow(ntree), function(i) {
+        removeScores(ntree[i,]) %>% paste0(collapse = ".")
+      })
+      
+      allCols <- get_selected(input$fourTheoMultiActivityToPlot, format = "names") %>%
+        lapply(function(x){
+          paste0(c(attr(x, "ancestry"), x[1]), collapse = ".")
+        })%>%
+        unlist()
+      isOpen <- lapply(get_selected(input$fourTheoMultiActivityToPlot, format = "names"), function(x){
+        if(is.null(attr(x, "stopened"))) {
+          F
+        } else {
+          T
+        }
+      })%>%unlist()
+      
+      hasNoAncestor <- lapply(get_selected(input$fourTheoMultiActivityToPlot, format = "names"), function(x) {
+        if(length(attr(x, "ancestry")) > 0) {
+          F
+        } else {
+          T
+        }
+      })%>%unlist()
+      
+      hasOpenAncestor <- lapply(get_selected(input$fourTheoMultiActivityToPlot, format = "names"), function(x) {
+        y <- paste0(c(attr(x, "ancestry")), collapse = ".")
+        # browser()
+        if(y == "") {
+          F
+        } else {
+          # toR <- isOpen[which(allCols == y)]
+          if(!y%in%allCols) {
+            T
+          } else {
+            isOpen[which(allCols == y)]
+          }
+          
+        }
+      }) %>% unlist()
+      #      is closed AND (no ancestor OR has open ancestor) # closed = NOT open
+      
+      actualCols <- allCols[(!isOpen & hasNoAncestor) | (!isOpen & hasOpenAncestor)]
+      
+    }
+    
+    if(length(treeCols) > 0) {
+      # browser()
+      dat2$multiTheoColSNum <<- dat2$multiTheoColSNum+1
+      dat2$multiTheoColS <<- actualCols
+      
+      selected <- gsub(" ", "_", actualCols, fixed = T) %>% gsub("_", ".",.) # selected
+      cols <- c("green", "blue", "yellow", "black", "red", "grey")
+      if(length(selected) == 1) {
+        x <- data.frame(t(c(selected, 1:6))) %>% as.data.table()
+      } else {
+        x <- cbind(selected, sapply(1:length(cols), function(x) {rep(x,length(selected))})) %>% as.data.table()
+      }
+      
+      colnames(x) <- c("Activity", cols)
+      
+      x <- x %>% mutate(check = sapply(x$Activity%>%as.character, function(y) {
+        y <- paste0(y, paste0(rep("a",dat2$multiTheoColSNum-1), collapse = ""))
+        if(!is.null(input[[y]])) {input[[y]]} else {4}
+      })
+      )
+      # Format names of table entries, and map in radio buttons
+      x <- cbind(data.frame(Activity_Name = x$Activity),x) %>% mutate(Activity_Name = gsub(".", "<br>", Activity_Name, fixed = T),
+                                                                      Activity = paste0(Activity, paste0(rep("a",dat2$multiTheoColSNum), collapse = ""))
+      ) %>%
+        mutate(across(cols, function(x) {sprintf('<input type="radio" name="%s" value="%s" %s/>', Activity, `x`, ifelse(`x`==`check`,"checked" ,""))}) )
+      output$fourTheoMultiActivityToPlotColours <- renderUI({
+        column(width = 12, fluidRow(style = "overflow-x: scroll;",
+                                    DT::dataTableOutput('multiTheoColours'),
+                                    verbatimTextOutput('sel')
+        )
+        )
+      })
+      
+      x <- as.data.table(x)
+      # Remove field used to select which entry is selected i neach row, then render the table
+      x[ ,`:=`(check = NULL)]
+      output$multiTheoColours = DT::renderDataTable(
+        x, escape = FALSE, selection = 'none', server = FALSE, rownames=FALSE,
+        options = list(dom = 't', paging = FALSE, ordering = FALSE, columnDefs = list(list(visible=FALSE, targets=c(1)))), # options=list()
+        callback = JS("table.rows().every(function(i, tab, row) {
                     var $this = $(this.node());
                     $this.attr('id', this.data()[1]);
                     $this.addClass('shiny-input-radiogroup');
   });
                     Shiny.unbindAll(table.table().node());
                     Shiny.bindAll(table.table().node());")
-     )
-     # browser()
-   }
- })
-
-
+      )
+      # browser()
+    }
+  })
+  
+  
   ###############################
   #### Risk Strat / Regression(s)
-
+  
   # 5.1
   observeEvent(input$fiveRisk1go, {
     source("./functions/section5Tools.R")
@@ -2862,16 +2929,16 @@ server <- function(input,output,session){
     selected <- selected[[1]]
     
     rsTry <- tryCatch({
-    if(!is.null(input$twoRisk1Var1) & nrow(ntree[treeCols,]) > 0) {
-      throwModal("Loading activity data")
+      if(!is.null(input$twoRisk1Var1) & nrow(ntree[treeCols,]) > 0) {
+        throwModal("Loading activity data")
         # Train logit on entire pop -> predict activity chance on them -> select those who are "yes" to then train linear regression
         ## For now, hurdle model but use both steps: find individuals with activity, then predict their predicted cost
         # Logistic regression
         # Either on activity or cost
-
-      
-      ## Section 1 start ###############################################
-      ## read in and mutate activity
+        
+        
+        ## Section 1 start ###############################################
+        ## read in and mutate activity
         if(input$twoRisk1Var2 == "Expected cost (GBP)") {
           print("Cost")
           act_data <- readRDS("./data/act_.rds") %>% group_by_at(c("id", dat2$actPodCols)) %>%
@@ -2899,7 +2966,7 @@ server <- function(input,output,session){
         ## merge to attributes, remove spaces by adding _, find NAs
         act_data <- merge(dat$attributes[,c("id",unique(input$twoRisk1Var1))], act_data, all.x = T)
         act_data$act <- act_data$act %>% sapply(function(x) { if(is.na(x)) {0} else {x}})
-
+        
         add_sco <- function(x){
           gsub(" ", "_", x, fixed = T)
         }
@@ -2932,10 +2999,10 @@ server <- function(input,output,session){
         } else {
           
           act_data2 <- tryCatch({kNN(act_data)},
-                   error=function(cond) {
-                     print("Crash")
-                     return(cond)
-                   })
+                                error=function(cond) {
+                                  print("Crash")
+                                  return(cond)
+                                })
           
           if(class(act_data2) != "data.frame"  | class(act_data2) == "try-error" | class(act_data2) == "NULL") {
             NAcount <- lapply(act_data, function(x) {
@@ -3005,7 +3072,7 @@ server <- function(input,output,session){
         }
         train <- get_training_data(act_data)
         gc()
-
+        
         # Trim out cols with only 1 value ; further, note this assumes no NAs will trim data to small enough that unique values are lost
         colU <- lapply(na.omit(act_data[train,]), function(x) {length(unique(x))}) %>% unlist
         colU[1] <- 1
@@ -3027,9 +3094,9 @@ server <- function(input,output,session){
                         , family = "binomial", data = act_data[train,colU > 1],
                         na.action = na.omit)
         # predicted <- predict(glmModel, act_data[!train,], type="response")
-
+        
         if(input$fiveRiskLogRAIC) {
-
+          
           # library(dplyr)
           showModal(
             modalDialog(
@@ -3045,7 +3112,7 @@ server <- function(input,output,session){
           aic2 <- round(AIC(glmModel),2)
         }
         print(Sys.time())
-
+        
         showModal(
           modalDialog(
             h2("Testing logistic regression"),
@@ -3060,8 +3127,8 @@ server <- function(input,output,session){
         # Test model - once I have a way of printing important numbers, use same to print
         predicted <- predict(glmModel, act_data[!train,], type="response")
         acc <- length(which(act_data[!train,"act"] == 1*(predicted>input$fiveRiskMinProb)))/length(which(!train))
-
-
+        
+        
         showModal(
           modalDialog(
             h2("Obtaining logistic regression predicted values"),
@@ -3076,16 +3143,16 @@ server <- function(input,output,session){
         } else {
           aicMessage <- br()
         }
+        # browser()
         output$fiveRisk1Out1 <- renderUI({
           list(
             h3("Fitted Logistic Regression"),
-            # br(),
             HTML("<b>Based on threshold of ", input$fiveRiskMinProb, ":</b>"),
             br(),
             paste0("Testing Accuracy: ", paste0(round(acc*100), "%")),
             br(),
             column(width = 6,fluidRow(
-                   paste0(length(which(predicted >= input$fiveRiskMinProb)), " individuals are predicted at least one point of activity.")
+              paste0(length(which(predicted >= input$fiveRiskMinProb)), " individuals are predicted at least one point of activity.")
             )),
             column(width = 6,
                    downloadButton("fiveRiskDownload1", "Download Logistic Regression Model"),
@@ -3093,14 +3160,14 @@ server <- function(input,output,session){
             aicMessage
           )
         })
-
+        
         output$fiveRisk1DownloadUI <- renderUI({
           list(
             # downloadButton("fiveRiskDownload1", "Download Logistic Regression Model"),
             uiOutput("fiveRisk1DownloadUI2")
           )
         })
-
+        
         # strip out 'heavy' parts of model
         # glmModel$model <- NULL
         # glmModel$data <- NULL
@@ -3112,7 +3179,7 @@ server <- function(input,output,session){
         # glmModel$weights <- NULL
         # glmModel$prior.weights <- NULL
         # glmModel$y <- NULL
-
+        
         dat2$riskLogModel <<- summary(glmModel)
         # Note: we may need to remove a bunch of points if we have too many
         simple_roc <- function(labels, scores) {
@@ -3143,8 +3210,8 @@ server <- function(input,output,session){
         }))
         
         fig <- plot_ly(roc_t_reduced, x = ~FPR, y = ~TPR, type = 'scatter', mode = 'lines', color = I('black'), name = "ROC", text = paste0("FPR :", round(roc_t_reduced$FPR,2), "<br>",
-                                                                                                                                    "TPR :", round(roc_t_reduced$TPR,2), "<br>",
-                                                                                                                                    "Threshold: ", round(roc_t_reduced$scores, 2)), hoverinfo = "text") 
+                                                                                                                                            "TPR :", round(roc_t_reduced$TPR,2), "<br>",
+                                                                                                                                            "Threshold: ", round(roc_t_reduced$scores, 2)), hoverinfo = "text") 
         fig <- fig %>% add_segments(x = 0, y = 0, yend = 1, xend = 1, color = I('orange'), name = 'Reference Line')
         fig <- fig %>% add_markers(x = p$FPR, y = p$TPR, yend = p$TPR, xend = p$FPR, color = I('blue'), text = p$text, name = 'Selected Threshold')
         fig <- fig %>% layout(title = paste0("ROC Curve (AUC = ", round(t3, 2), ")"),
@@ -3156,7 +3223,7 @@ server <- function(input,output,session){
           fig
         })
         output$fiveRiskBox12 <- renderPlot({
-
+          
           a23 <- table(factor(case_when(roc_t$scores>=input$fiveRiskMinProb ~ "Yes", T ~ "No")), factor( case_when(roc_t$labels>=input$fiveRiskMinProb ~ "Yes", T ~ "No") )) %>% as.data.frame()
           colnames(a23) <- c("Prediction", "Reference", "Freq")
           if(nrow(a23) != 4) {
@@ -3193,7 +3260,7 @@ server <- function(input,output,session){
             ggtitle("Confusion Matrix (Test Data Only)")
           
         })
-
+        
         #####
         if(input$twoRisk1Var2 == "Likelihood of activity [0,1]") {
           showModal(
@@ -3206,8 +3273,8 @@ server <- function(input,output,session){
           # browser()
           dat2$riskLinearModel <<- NULL
           dat2$riskTable <<- data.frame(id = act_data$id, predicted_act = predicted, predicted_act_group = ntile(predicted,10))
-          # TODO review line below when I have a clear head
-          dat$attributes$util.risk_strat <<- util_risk_strat(dat, data.frame(id = act_data$id, predicted_act = predicted))
+
+          dat2$segMem[[5]] <<- util_risk_strat(dat, dat2$riskTable)
 
         } else {
           ## Section 6 end ###############################################
@@ -3242,7 +3309,7 @@ server <- function(input,output,session){
           # Having obtained predictions, find people with activity
           ##### NOTE: add caveat about having activity as well as predicted to have activity # TODO
           train <- get_training_data(((act_data[((predicted>=input$fiveRiskMinProb) & act_data$act >= 1),])))
-
+          
           colU <- na.omit((act_data[((predicted>=input$fiveRiskMinProb) & act_data$act >= 1),])[train,]) %>% lapply( function(x) {length(unique(x))}) %>% unlist
           colU[1] <- 1
           showModal(
@@ -3297,17 +3364,17 @@ server <- function(input,output,session){
             })
           
           t <- data.frame(y = lmPred, x = (act_data[((predicted>=input$fiveRiskMinProb) & act_data$act >= 1),colU > 1])[!train,"act"])
-
+          
           if(nrow(t) > 10000) {
-              t <- t[sample(1:nrow(t), 5000),]
+            t <- t[sample(1:nrow(t), 5000),]
           }
           df2 <- data.frame(
             x = c((act_data[((predicted>=input$fiveRiskMinProb) & act_data$act >= 1),colU > 1])[!train,"act"], lmPred),
             Data = gl(2, length(lmPred), labels = c("Orignal", "Predicted"))
           )
           output$fiveRiskBox22 <- renderPlot({
-              ggplot(df2, aes(x, colour = Data)) +
-                stat_ecdf() + xlab(makeNice(isolate(input$twoRisk1Var2))) + ylab("Cumulative Probability") + ggtitle("ECDF Plot (Test Data Only)")
+            ggplot(df2, aes(x, colour = Data)) +
+              stat_ecdf() + xlab(makeNice(isolate(input$twoRisk1Var2))) + ylab("Cumulative Probability") + ggtitle("ECDF Plot (Test Data Only)")
           })
           plot <- ggplot(t) + geom_abline(color='orange') + 
             geom_point(mapping = aes(x, y), color='blue')+
@@ -3316,12 +3383,12 @@ server <- function(input,output,session){
             ggtitle("Assessing Goodness Of Linear Regression (In Test Set)")+
             ylim(0, quantile(lmPred, 0.99)) +
             xlim(0,quantile((act_data[((predicted>=isolate(input$fiveRiskMinProb)) & act_data$act >= 1),colU > 1])[!train,"act"], 0.99))
-            
+          
           
           output$fiveRiskBox21 <- renderPlot({
             plot
           })
-
+          
           me <- isolate(round(sum(abs((act_data$act[((predicted>=input$fiveRiskMinProb) & act_data$act >= 1)])[!train]-lmPred))/length(act_data$act),2))
           mape <- mean(abs(((act_data$act[((predicted>=input$fiveRiskMinProb) & act_data$act >= 1)])[!train]-lmPred) / (act_data$act[((predicted>=input$fiveRiskMinProb) & act_data$act >= 1)])[!train])) * 100
           ars <- round(summary(lmModel)$adj.r.squared, 2)
@@ -3329,7 +3396,7 @@ server <- function(input,output,session){
           # browser()
           # Get r squared
           print("Starting linear regression prediction 2")
-
+          
           lmPred <- tryCatch(
             {
               predict.lm(lmModel, act_data)
@@ -3346,7 +3413,7 @@ server <- function(input,output,session){
           # get expected activity
           act_data$predicted_act <- predicted * lmPred
           act_data$predicted_act[predicted<input$fiveRiskMinProb] <- 0
-
+          
           # predicted>input$fiveRiskMinProb -> set to 0
           # Expected costs
           act_data$predicted_act <- lapply(act_data$predicted_act, function(x) { if(!is.na(x)) {if (x < 0) {0} else {x}} else {0} })%>%unlist
@@ -3372,24 +3439,24 @@ server <- function(input,output,session){
               br()
             )
           })
-
+          
           output$fiveRisk1DownloadUI2 <- renderUI({
             list(
               downloadButton("fiveRiskDownload2", "Download Linear Regression Model")
             )
           })
-
+          
           dat2$riskLinearModel <<- summary(lmModel)
-
+          
           lm_mod$lm_obj <- lmModel
-
+          
           plotData <- data.frame(y = c(act_data$predicted_act, act_data$act), x = c(rep("Predicted",nrow(act_data)),rep("Original",nrow(act_data))))
           plotData <- plotData[sample(1:nrow(plotData), ceiling(nrow(plotData)*(100/100))),]
-
+          
           dat2$riskTable <<- act_data %>% select_at(c("id", "predicted_act")) %>% mutate(predicted_act_group = ntile(predicted_act,10))
           # dat$attributes$util.risk_strat <<- util_risk_strat(dat, act_data)
-          dat2$segMem[[5]] <<- util_risk_strat(dat, act_data)
-          # browser() # TODO add in defult value when excluding NAs
+          dat2$segMem[[5]] <<- util_risk_strat(dat, dat2$riskTable)
+          
           showModal(
             modalDialog(
               h2("Graphing Results"),
@@ -3400,20 +3467,7 @@ server <- function(input,output,session){
         }
         ## Section 10 end ###############################################
         ## Section 11 start ###############################################
-        # add to rest of tool
-        # listText = "Risk Strat"
-        # listCol = "util.risk_strat"
-        # 
-        # if(listText%in%dat2$groupByListText) {
-        #   i <- which(dat2$groupByListText == listText)
-        # } else {
-        #   i <- length(dat2$groupByListText) + 1
-        # }
-        # dat2$groupByListText[[i]] <<- listText
-        # dat2$groupByList[[i]] <<- listCol
-        # 
-        # updateAllWithNewImportantField(dat)
-
+        
         output$fiveRiskBox4 <- renderUI({
           fluidRow(
             column(width = 12,
@@ -3428,8 +3482,8 @@ server <- function(input,output,session){
                      column(width = 6,
                             plotlyOutput("fiveRiskplot22")
                      )
-                   ),
-                   HTML("Risk groups added to GlobalGroups variables.")
+                   )
+                   # HTML("Risk groups added to GlobalGroups variables.")
             ),
             
           )
@@ -3446,12 +3500,31 @@ server <- function(input,output,session){
         print("Rendered plot")
         
         removeModal()
-    }
+        
+        output$fiveRiskAddGG <- renderUI({
+          box(width = 12, title = "Add to GlobalGroups",
+              fluidRow(
+                column(width = 6,
+                       textInput("fiveRiskGGName", "Refence Name:")
+                ),
+                column(width = 3, style = "margin-top: 25px;"
+                ),
+                column(width = 3, style = "margin-top: 25px;",
+                       actionButton("fiveRiskGGAdd", "Add")
+                )
+              ),
+              fluidRow(
+                column(width = 12,
+                       textOutput("fiveRiskGGErr")
+                )
+              )
+          )
+        })
+        
+      }
     },
     error = function(cond) {
       print("Crash")
-      # print(cond)
-      # browser()
       removeModal()
       output$fiveRisk1Out1 <- renderUI({list(
         HTML("Something went wrong. The error message is:"),
@@ -3462,71 +3535,72 @@ server <- function(input,output,session){
       return(cond)
     })
   })
- 
- observeEvent(input$fiveRiskMissingDetails, {
-   # User requests a list of missing values
-   # For speed, do it only w.r.t. selected attributes
-   showModal(
-     modalDialog(
-       HTML("<h2>Please Wait While Processing</h2>"), # </strong>
-       br(),
-       hr(),
-       footer = tagList()
-     )
-   )
-   outputReport <- sapply(unique(input$twoRisk1Var1), function(x) {
-     return(length(which(is.na(dat$attributes[[x]]))))
-   })
-   # browser()
-   rows <- nrow(dat$attributes)
-   if(length(which(length(outputReport) > 1)) == 0) {
-     outputReport <- HTML("No missing values found in selected attributes.")
-   } else {
-     y <- sapply(outputReport[outputReport > 1], function(x) {
-       paste0(": ", x, " NAs (", round(x/rows,2), "%)<br>")
-     })
-     outputReport <- paste0(paste0(makeNice(names(y)), y, sep = ""), collapse = "")
-     
-     outputReport <- paste(
-       "Missing values found in the following:", "<br>", outputReport
-     )
-     outputReport <- HTML(outputReport)
-   }
-   
-   showModal(
-     modalDialog(
-       list(
-       HTML("<h2><strong>Missing Data Summary</strong></h2>"),
-       hr(),
-       outputReport,
-       hr()
-       ),
-       footer = tagList(
-         modalButton("OK", icon = NULL)
-       )
-     )
-   )
-  print("Printed list of NAs")
- })
- observeEvent(input$fiveRiskGGAdd, {
-   addGraph(5, input$fiveRiskGGName, "fiveRiskGGErr", dat, dat2)
- })
-
-
+  
+  observeEvent(input$fiveRiskMissingDetails, {
+    # User requests a list of missing values
+    # For speed, do it only w.r.t. selected attributes
+    showModal(
+      modalDialog(
+        HTML("<h2>Please Wait While Processing</h2>"), # </strong>
+        br(),
+        hr(),
+        footer = tagList()
+      )
+    )
+    outputReport <- sapply(unique(input$twoRisk1Var1), function(x) {
+      return(length(which(is.na(dat$attributes[[x]]))))
+    })
+    # browser()
+    rows <- nrow(dat$attributes)
+    if(length(which(length(outputReport) > 1)) == 0) {
+      outputReport <- HTML("No missing values found in selected attributes.")
+    } else {
+      y <- sapply(outputReport[outputReport > 1], function(x) {
+        paste0(": ", x, " NAs (", round(x/rows,2), "%)<br>")
+      })
+      outputReport <- paste0(paste0(makeNice(names(y)), y, sep = ""), collapse = "")
+      
+      outputReport <- paste(
+        "Missing values found in the following:", "<br>", outputReport
+      )
+      outputReport <- HTML(outputReport)
+    }
+    
+    showModal(
+      modalDialog(
+        list(
+          HTML("<h2><strong>Missing Data Summary</strong></h2>"),
+          hr(),
+          outputReport,
+          hr()
+        ),
+        footer = tagList(
+          modalButton("OK", icon = NULL)
+        )
+      )
+    )
+    print("Printed list of NAs")
+  })
+  observeEvent(input$fiveRiskGGAdd, {
+    # browser()
+    addGraph(5, input$fiveRiskGGName, "fiveRiskGGErr", dat, dat2)
+  })
+  
+  
   observeEvent(input$fiveRisk1InfoD1, {
     showModal(
       modalDialog(
         HTML("<h2><strong>Risk Stratification</strong></h2>"),
         p("This page stratifies the population by the selected measure into 10 distinct groups."),
-
+        
         HTML("<strong>To get started:</strong>"),
         p("Use the first dropdown to select attribute(s) to use during the stratification."),
         p("Then, select the prediction target. There are 3 options: the probability of having activity of the selected type,
           the expect number of activity instances, or the expected costs. The activity types can be selected from the tree at the right (the tree can be expanded to show further POD levels)."),
-
+        
         # p("The final step is to decide on a cut-off value in range [0, 1], then click 'Go!'"),
         p("For more details, see Technical details."),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -3538,19 +3612,19 @@ server <- function(input,output,session){
     showModal(
       modalDialog(
         HTML("<h2><strong>Technical Details</strong></h2>"),
-
+        
         p("First, the selected activity is summarised (either as activity instance count, or cost, depending on the option selected). Then, a logistic regression model is trained",
           " on a subset, before being used to predict, for the entire population, the probability that an individual will have activity based on their attributes data.",
           "This returns a probability in the range [0 ,1]. All patients with a probability greater than or equal the cut-off value are given a positive prediction; all others a negative.",
-          ),
-
+        ),
+        
         p("If the 'Likelihood of activity' option is selected, the ExploreR creates the stratified groups based on the returned probabilities, and terminates.",
           "If one of the other options is selected, then a linear regression model is trained on the subset predicted to have some activity/cost (based on the output of the first step). ",
           "This is done to minimise the number of negative values predicted by the linear model."),
-
+        
         p("Finally, the linear model is used to predict the expected activity/costs, which are then multiplied by the probability from the logistic model to obtain the expected",
           "activity/cost for each individual. Please note linear regression can give rise to negative predictions, which are replaced with 0s for data consistency."),
-
+        
         footer = tagList(
           modalButton("OK", icon = NULL)
         ),
@@ -3580,7 +3654,7 @@ server <- function(input,output,session){
   #     )
   #   )
   # })
-
+  
   observeEvent(input$fiveRiskSetupInfo, {
     showModal(
       modalDialog(
@@ -3675,27 +3749,27 @@ server <- function(input,output,session){
       closeAllConnections()
     }
   )
-
+  
   ## Need to:
   # Update all group_bys
   # Some seg/risk strat select options
   updateAllWithNewImportantField <- function(dat) {
     # Assume for cohort user has to go back and re-select "highlighted variables" option
     # Update section 1 options
-
+    
     updateSelectInput(session, "oneActVertical", choices = dat2$groupByListText[!is.na(dat2$groupByList)], selected = input$oneActVertical)
     updateSectionOneGroupBy(session, dat2)
-
+    
     # Update segmentation: CART, Clustering, Risk options
     t <- dat2$groupByList[!is.na(dat2$groupByList)]
     names(t) <- dat2$groupByListText[!is.na(dat2$groupByList)]
-
+    
     t2 <- c("total_cost", "total_act")
     names(t2) <- sapply(c("total_cost", "total_act"),makeNicePPY)
-
+    
     cm <- dat$attributes%>%dplyr::select(starts_with("clinic.misc")) %>% colnames
     names(cm) <- sapply(cm, removePrefix) %>% sapply(makeNice)
-
+    
     segColNames2 <- list(
       dat2$demogCols[which(dat2$demogCols%in%colnames(dat$attributes))],
       c(cm, dat2$clinicCols),
@@ -3711,14 +3785,14 @@ server <- function(input,output,session){
       t
     )
     names(segColNames2) <- c("Demographic", "Clinical/LTCs", "Area", "Socio-economic (deprivation)", "GlobalGroups")
-
+    
     updatePickerInput(session, "twoCARTVar1", choices = segColNames2,
                       selected = input$twoCARTVar1,
                       options = list(`actions-box` = TRUE, size = 12, noneSelectedText = "Please select at least 1 variable"))
-
+    
     updatePickerInput(session, "navTabGlobalVar", choices = segColNames2, selected = input$navTabGlobalVar)
     updatePickerInput(session, "navTabCurrentGlobalVar", choices = t)
-
+    
     updateSelectizeInput(session, "twoClusterVar1", choices = segColNames2, selected = input$twoClusterVar1)
     updateSelectInput(session, "twoClusterVar2", choices = segColNames2, selected = input$twoClusterVar2)
     
@@ -3730,7 +3804,7 @@ server <- function(input,output,session){
     updatePickerInput(session, "oneGeneralTableFields", choices = segColNames3, selected = input$oneGeneralTableFields)
     
     segColNames3 <- segColNames2
-
+    
     segColNames3[[length(segColNames3)+1]] <- t2
     names(segColNames3)[length(segColNames3)] <- "Total Activity/Cost"
     updatePickerInput(session, "twoClusterVars", choices = segColNames3,
@@ -3739,12 +3813,12 @@ server <- function(input,output,session){
     updatePickerInput(session, "twoRisk1Var1", choices = segColNames2,
                       selected = input$twoRisk1Var1,
                       options = list(`actions-box` = TRUE, size = 12, noneSelectedText = "Please select at least 1 variable"))
-
+    
     updatePickerInput(session, "fourTheoSingleGlobalGroup", choices = t, selected = input$fourTheoSingleGlobalGroup)
     updatePickerInput(session, "fourTheoMultiGlobalGroup", choices = t, selected = input$fourTheoMultiGlobalGroup)
-
+    
   }
-
+  
 }
 
 shinyApp(ui = ui, server = server, options = list(shiny.maxRequestSize = 500*1024^10))
