@@ -884,19 +884,19 @@ server <- function(input,output,session){
     name = input$zeroAnalysisDatasetToRemove
     
     showModal( modalDialog(
-      title = paste0("Removing dataset", name),
+      title = paste0("Removing dataset ", name),
       p("Please wait while processing."),
       footer = tagList(),
       easyClose = F
     ))
     
     output$zeroAnalysisDatasetRemoveMessage <- renderText({
-      paste("Removed Analysis Dataset ", name)
+      paste("Removed Analysis Dataset ", name, ".")
     })
     
     dat2$AnalysisDatasets[[input$zeroAnalysisDatasetToRemove]] <<- NULL
     dat2$AnalysisDatasetsStats[[input$zeroAnalysisDatasetToRemove]] <<- NULL
-    
+    # browser()
     updatePickerInput(session, "zeroAnalysisDataPicker", choices = colnames(dat2$AnalysisDatasets))
     updatePickerInput(session, "zeroAnalysisDatasetToRemove", choices = colnames(dat2$AnalysisDatasets)[-1])
     # TODO Add below back in
@@ -1748,7 +1748,7 @@ server <- function(input,output,session){
       dat2$groupByList[[i]] <<- listCol
       
       updateAllWithNewImportantField(dat)
-      
+      output[[err]] <- renderText(paste0("Added ", name, " to GlobalGroups variables."))
     }
   }
   
@@ -1814,7 +1814,7 @@ server <- function(input,output,session){
   })
   
   observeEvent(input$two3x3GGAdd, {
-    browser()
+    # browser()
     addGraph(1, input$two3x3GGName, "two3x3GGErr", dat, dat2)
   })
   
@@ -1948,6 +1948,7 @@ server <- function(input,output,session){
           )
         })
       })
+      # eCART add in error message?
       removeModal()
     }
   })
