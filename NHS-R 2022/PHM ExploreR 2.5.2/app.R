@@ -76,7 +76,7 @@ server <- function(input,output,session){
     toLoad$ethnicity <- !is.na(dat2$ethnicity)
     toLoad$dep <- if(!is.na(dat2$dep)) {TRUE} else {FALSE}
     toLoad$geo <- if(!is.na(dat2$area)) {TRUE} else {FALSE}
-    toLoad$widerDet <- if(!is.na(dat2$wider)) {TRUE} else {FALSE}
+    toLoad$widerDet <- if(any(!is.na(dat2$wider))) {TRUE} else {FALSE}
     # Section 2 (Segmentation)
     toLoad$segBTH <- "util.segmentation.BtHSegment"%in%colnames(dat$attributes)
     # Section 3 (Cohort Identification)
