@@ -1901,7 +1901,7 @@ server <- function(input,output,session){
     }
   })
   observeEvent(input$twoCARTTreeRules, ignoreInit = T, {
-    if(input$twoCARTTreeRules & !is.na(dat2$cartModel)) {
+    if(input$twoCARTTreeRules & !all(is.na(dat2$cartModel))) {
       output$twoCARTTreeRulesTable <- renderTable({
         rules <- rpart.rules(dat2$cartModel, nn = TRUE)
         newIDs <- 1:nrow(rules)
