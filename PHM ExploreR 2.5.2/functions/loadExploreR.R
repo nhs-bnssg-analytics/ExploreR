@@ -11,8 +11,10 @@ loadExploreR <- function(data, dat, input, output) {
   dat2$segMem[[3]] <<- NULL
   dat2$segMem[[4]] <<- NULL
   dat2$segMem[[5]] <<- NULL
-  
-  maxDate2 <- ymd(dat2$maxtime)# - years(1)
+
+  if("POSIXct"%in%class(dat2$maxtime)){maxDate2 <- dat2$maxtime
+  } else {  maxDate2 <- ymd(dat2$maxtime)# - years(1)
+  }
   minDate2 <- maxDate2 - years(1)
   # minDate2 <- ymd(dat2$mintime)# - years(1)
   if(is.na(maxDate2)) {
@@ -22,7 +24,7 @@ loadExploreR <- function(data, dat, input, output) {
     minDate2 <- maxDate2 - years(1)
   }
 
-  
+
   for(i in 0:17) {
     output[[paste0("oneCoverBoxs",i)]] <- renderUI({h4(tags$b("Analysis Dataset: "), makeNice(isolate(input$zeroAnalysisDataPicker)))})
     output[[paste0("oneCoverBoxDate",i)]] <- renderUI({h4(paste0("Activity from ", minDate2, " to ", maxDate2))})
@@ -32,7 +34,7 @@ loadExploreR <- function(data, dat, input, output) {
   # Load page 1.0
   #########
   # 1.0.1 Population pyramid
-  
+
   demChoices <- c(dat2$clinicCols)
   names(demChoices) <- makeNice(demChoices %>% sapply(function(x) {removePrefix(x) %>% removePrefix()}) %>% unlist())
   updateSelectizeInput(session, "oneDemogClinNeed", choices = demChoices,# (dat2$ltcCols, dat2$demogCols)
@@ -40,7 +42,7 @@ loadExploreR <- function(data, dat, input, output) {
                          placeholder = 'Please select a condition (optional)',
                          onInitialize = I('function() { this.setValue(""); }')
                        ))
-  
+
   population_pyramid <- function(input_dat){
     colnames(input_dat)[1:2] <- c("demog.age", "demog.sex")
     # input_dat <- input_dat[order(demog.sex, decreasing = T),]
@@ -52,15 +54,15 @@ loadExploreR <- function(data, dat, input, output) {
     input_dat$demog.sex <- makeNice(input_dat$demog.sex)
     p <- plot_ly(input_dat,
                  y = ~ demog.age,
-                 x = ~ freq,    
+                 x = ~ freq,
                  color = ~ demog.sex,
                  legendgroup= ~ demog.sex,
                  orientation = "h",
                  # sort = F,
                  text =  ~paste0("There are ", text_freq, " ", demog.age , "-year-olds ", demog.sex, "s <br>"),
-                 hoverinfo="text") %>% 
+                 hoverinfo="text") %>%
       add_bars(opacity=0.5,
-               width=1) %>% 
+               width=1) %>%
       layout(
         xaxis=list(tickvals=measure_axis,
                    ticktext=measure_axis_labels,
@@ -74,20 +76,20 @@ loadExploreR <- function(data, dat, input, output) {
   # browser()
   output$pyramid <- renderPlotly({
     population_pyramid(
-      dat$attributes %>% 
-        select_at(c(dat2$age, dat2$sex)) %>% 
-        subset(.[[dat2$sex]] %in% c("male", "female")) %>% 
-        group_by_at(c(dat2$age, dat2$sex)) %>% 
-        count(name = "freq") %>% 
-        mutate(freq=ifelse(!!sym(dat2$sex) == "male", yes = freq, no = -freq)) %>% 
-        ungroup() %>% 
+      dat$attributes %>%
+        select_at(c(dat2$age, dat2$sex)) %>%
+        subset(.[[dat2$sex]] %in% c("male", "female")) %>%
+        group_by_at(c(dat2$age, dat2$sex)) %>%
+        count(name = "freq") %>%
+        mutate(freq=ifelse(!!sym(dat2$sex) == "male", yes = freq, no = -freq)) %>%
+        ungroup() %>%
         mutate(text_freq=ifelse(abs(freq)<=4,"*suppressed",trimws(format(abs(freq),big.mark = ","),"both"))
         )
     )
   })
-  
+
   # 1.0.2 Clinical Graph
-  
+
   output$pyramidClinical <- renderPlotly({clinicPlotSolve(dat, dat$attributes[,"util.ltc_sum"] %>% as.data.frame(),# %>% as.character()
                                                              "Population (%)",
                                                              NA,
@@ -100,32 +102,32 @@ loadExploreR <- function(data, dat, input, output) {
   # 1.0.6 Determinants Graph
   # Load page 1.1 (if applicable?)
   #########
-  
+
   # Load page 1.2 (if applicable?)
   #########
-  
+
   updateSelectInput(session, "oneClinY", choices = dat2$yChoices)
 
-  updateSelectizeInput(session, "oneClinMulti", choices = clinOptions(dat2$ltcCols),# dat2$ltcCols, 
+  updateSelectizeInput(session, "oneClinMulti", choices = clinOptions(dat2$ltcCols),# dat2$ltcCols,
                        selected = dat2$ltcCols[1:2],
                        options = list(
                          placeholder = 'Please select at least one option below',
                          onInitialize = I('function() { this.setValue(""); }')
                        ))
-  
+
   # Load page 1.3 (activity) (if applicable? - ahould always be)
   #########
   updateSelectInput(session, "oneActVertical", choices = dat2$groupByListText[!is.na(dat2$groupByList)])
   # updateSelectizeInput(session, "oneActVertical", choices = dat2$groupByListText[!is.na(dat2$groupByList)])
-  
+
   optList <- makeNice(c(unique(dat2$theorows$pod_l1), "Total"))
   names(optList) <- makeNice(optList)
   updateCheckboxGroupInput(session, "oneActX", choices = optList, selected = optList, inline = TRUE)
-  
+
   output$oneActGraph2 <- renderPlotly({
     #####
     actGraph2 <- dat$attributes %>%
-      select_at("total_cost") %>% 
+      select_at("total_cost") %>%
       arrange_at("total_cost") %>%
       mutate(.,cost_cumsum_prop = cumsum(total_cost) / sum(total_cost),
              pop_prop = row_number() / nrow(.))
@@ -148,23 +150,23 @@ loadExploreR <- function(data, dat, input, output) {
     actGraph2$text <- paste(round(actGraph2$pop_prop * 100, digits = 1),"% of the population uses ", "\n",
                                  round(actGraph2$cost_cumsum_prop * 100, digits = 1), "% of spending",
                                  sep = "")
-    actGraph2 %>% arrange(cost_cumsum_prop, pop_prop) %>% 
-      plot_ly(., x = ~(pop_prop*100), y = ~(cost_cumsum_prop*100), name = 'Lorenz Curve', type = 'scatter', mode = 'lines', text = .[,"text"], hoverinfo = "text") %>% 
+    actGraph2 %>% arrange(cost_cumsum_prop, pop_prop) %>%
+      plot_ly(., x = ~(pop_prop*100), y = ~(cost_cumsum_prop*100), name = 'Lorenz Curve', type = 'scatter', mode = 'lines', text = .[,"text"], hoverinfo = "text") %>%
       layout(
              xaxis = list(title = 'Proportion of population (%)'),
              yaxis = list(title = 'Prop. of spending (%)')) %>%
     add_segments(x = 0, xend = 100, y = 0, yend = 100, name = 'Reference Line')
-  
+
   })
 
-  
+
   output$pyramidActivity <- renderPlotly({
     ggplotly(ggplot(as.data.frame(
       # dat2$summaryPageGraphs[[3]]
       {
       selectedGroup <- if(!is.na(dat2$area)) {dat2$area} else {"util.ltc_sum"}
       acts <- unique(dat2$theorows$pod_l1)
-      
+
       sumn <- function(x) {
         n <- length(x)
         if(n == 0) {return(0)} else {return(sum(x)/n)} # total/ number of people in part
@@ -173,7 +175,7 @@ loadExploreR <- function(data, dat, input, output) {
         # This needs a new function, passing cost+activity in pairs for scaling.
         data <- data %>% group_by_at(selectedGroup) %>% summarise_at(lapply(acts, function(x) {paste0("util.pod_l1.", x, actOrCost)})%>%unlist(), f) %>%
           pivot_longer(lapply(acts, function(x) {paste0("util.pod_l1.", x, actOrCost)})%>%unlist(), names_to = "pod_l1") %>%
-          mutate(pod_l1 = 
+          mutate(pod_l1 =
                    sapply(pod_l1, function(y) {
                      s <- strsplit(y, ".", fixed = TRUE)[[1]]
                      s <- s[c(-1,-2,-length(s))]
@@ -184,11 +186,11 @@ loadExploreR <- function(data, dat, input, output) {
         colnames(data)[3]<-"Cost"
         data
       }
-      
+
       data <- groupAndSum(
         dat$attributes %>% select_at(c("id", lapply(acts, function(x) {c(paste0("util.pod_l1.", x, ".cost"), paste0("util.pod_l1.", x, ".act"))}) %>% unlist(), selectedGroup)) %>% as.data.frame()
         , selectedGroup, actOrCost = ".cost", sum)
-      
+
       # Insert Total
       newdat <- data %>% group_by_at(selectedGroup) %>% summarise(total = sum(Cost)) %>% ungroup() %>% as.data.frame()
       newdat <- cbind(rep("Total", nrow(newdat)), newdat)
@@ -203,26 +205,26 @@ loadExploreR <- function(data, dat, input, output) {
               sep = ""
         )
       data}
-      ), aes_string(x="pod_l1", 
-                                                                           y=if(!is.na(dat2$area)) {dat2$area} else {"util.ltc_sum"}, 
-                                                                           size= "Cost", 
+      ), aes_string(x="pod_l1",
+                                                                           y=if(!is.na(dat2$area)) {dat2$area} else {"util.ltc_sum"},
+                                                                           size= "Cost",
                                                                            fill = "Cost",
                                                                            color = "Cost",
                                                                            text = "text")) +
-               geom_point(shape=21) + 
+               geom_point(shape=21) +
                ylab("") + xlab("Point of Delivery") +
                guides(fill = FALSE) +
-               scale_color_continuous(labels = scales::label_number_si())+
+               scale_color_continuous(labels = scales::label_number(scale_cut = cut_si("unit")))+
                theme(axis.text.x = element_text(size = 8, angle = 45),
                      legend.text = element_text(size = 6),
                      axis.text.y = element_text(size = 8, angle = 45, hjust = -1)
                      )
     ,tooltip = "text")
   })
-  
-  
+
+
   # print("Dep")
-  
+
   # Load page 1.4 (deprivation) (if applicable?)
   #########
   if(toLoad$dep) {
@@ -253,7 +255,7 @@ loadExploreR <- function(data, dat, input, output) {
   #########
   if(toLoad$geo) {
     updateSelectInput(session, "oneGeoY", choices = dat2$yChoices)
-    
+
     updateSelectInput(session, "oneGeoX", choices = dat2$areaCols, selected = dat2$area[1]) #geoXvalues
 
     output$uipyramidGeography <- renderUI({
@@ -264,7 +266,7 @@ loadExploreR <- function(data, dat, input, output) {
     })
     # loadArea()
     print("Loading base geo")
-    
+
     output$pyramidGeography <- renderPlotly({clinicPlotSolve(dat, dat$attributes[,dat2$area] %>% makeNice() %>% as.data.frame(),
                                                              dat2$yChoices[1],
                                                              NA,
@@ -274,7 +276,7 @@ loadExploreR <- function(data, dat, input, output) {
                xaxis = list(tickangle = -45),
                showlegend = FALSE)
     })
-    
+
     updateSelectInput(session, "oneGeoY", choices = dat2$yChoices)
   } else {
     output$uipyramidGeography <- renderUI({
@@ -285,7 +287,7 @@ loadExploreR <- function(data, dat, input, output) {
     })
   }
   # Load page 1.6 (determinants) (if applicable?)
-  ######### 
+  #########
   if(toLoad$widerDet) {
     output$uipyramidDeterminants <- renderUI({
       plotlyOutput("pyramidDeterminants")
@@ -318,28 +320,28 @@ loadExploreR <- function(data, dat, input, output) {
   updateSelectInput(session, "oneWidDetMapRegion", choices = dat2$areaCols)
 
   print("Summary page loading done")
-  
+
   options = dat2$ltcCols
-  
+
   ############################
-  
+
   source("./functions/3x3plots.R", local = TRUE)
   data <- isolate(getThreeByThreePlotsData(dat$attributes, input, fields = options))
   dat2$segMem[[1]] <<- paste0(data$g.age, ", ", data$g.complexity)
-  
-  
+
+
   output$clin3x3graph <- renderPlot(isolate(getThreeByThreePlots(data, input)))
   segGraph(1, dat2, dat, input$two3x3gTreeMapOptions, "two3x3TreeMap", "two3x3Pie", input)
-  
+
   gc()
-  
+
   #############################
-  
+
   # Load the segmentation page
   if(toLoad$segBTH) {
     output$seg_definitions <- renderTable({
       df <- data.frame(Segment = c("Frailty", "Limited Reserve", "Short Period of Decline",
-                                   "Stable But Serious Disability", "Chronic Conditions", 
+                                   "Stable But Serious Disability", "Chronic Conditions",
                                    "Maternal", "Acutely Ill", "Healthy")
       )
       df <- df %>% mutate(Definition = case_when(Segment == "Frailty" ~ "Is in Electronic Frailty Index (EFI) category 'Frail' or 'Moderate'",
@@ -352,7 +354,7 @@ loadExploreR <- function(data, dat, input, output) {
                                                  Segment == "Healthy" ~ "Is not covered by one of the other segments (n.b. may contain patients with long term conditions or health needs not covered by other segment definitions - e.g. organ transplant, iron-deficiency anaemia, eczema, psoriasis, thyroid disease, coeliac disease, hepatitis B or C, endometriosis, substance dependence, eating disorders, etc.)",
                                                  TRUE ~ "other"))
     })
-    
+
   }
   print("Loaded segmentation")
   cm <- dat$attributes%>%select(starts_with("clinic.misc")) %>% colnames
@@ -360,7 +362,7 @@ loadExploreR <- function(data, dat, input, output) {
 
   t <- dat2$groupByList[!is.na(dat2$groupByList)]
   names(t) <- dat2$groupByListText[!is.na(dat2$groupByList)]
-  
+
   t2 <- c("total_cost", "total_act")
   names(t2) <- sapply(c("total_cost", "total_act"),makeNicePPY)
 
@@ -385,39 +387,39 @@ loadExploreR <- function(data, dat, input, output) {
                     selected = segColNames)
   updatePickerInput(session, "twoRisk1Var1", choices = segColNames2,
                     selected = segColNames)
-  
+
   updatePickerInput(session, "navTabGlobalVar", choices = segColNames2)
   updatePickerInput(session, "navTabCurrentGlobalVar", choices = t)
-  
+
   updateSelectInput(session, "twoClusterVar1", choices = segColNames2)
   updateSelectInput(session, "twoClusterVar2", choices = segColNames2)
-  
+
   updatePickerInput(session, "oneGeneralTableX", choices = segColNames2)
 
   segColNames3 <- segColNames2
   segColNames3[[length(segColNames3)+1]] <- t2
   names(segColNames3)[length(segColNames3)] <- "Total Activity/Cost"
-  
+
   updatePickerInput(session, "oneGeneralTableFields", choices = segColNames3)
-  
+
   t2dt <- c("total_cost", "total_act")
   names(t2dt) <- sapply(c("total_cost", "total_act"),makeNicePPY)
 
   # updatePickerInput(session, "twoCARTVar2", choices = t2dt)
 
   updatePickerInput(session, "twoCARTVar2", choices = segColNames3)
-  
+
   t2Risk <- colnames(dat$attributes)[startsWith(colnames(dat$attributes), "util.pod")]
   names(t2Risk) <- sapply(t2Risk, removePrefix) %>% sapply(makeNice)
-  
-  
-  updatePickerInput(session, "twoClusterVars", choices = segColNames3, 
+
+
+  updatePickerInput(session, "twoClusterVars", choices = segColNames3,
                     selected = c(segColNames,t2),
                     options = list(`actions-box` = TRUE, size = 12, noneSelectedText = "Please select at least 1 variable"))
   ####
 
   tree <- getTree(dat2$theorows%>%as.data.frame())
-  
+
   for(i in 1:length(tree)) {
     attr(tree[[i]],"stselected")=TRUE
   }
