@@ -1,0 +1,28 @@
+---
+title: "`r params$title`"
+output: 
+    pdf_document
+params: 
+        title: NA
+        name: NA
+        graph: NA
+        table: NA
+        pat_wait: NA
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### "`r params$title`"
+```{r, echo=FALSE}
+# params$graph
+"Graph should be here, but needs rework."
+```
+
+#### "`r params$title`" 
+```{r, echo=FALSE}
+knitr::kable(params$table,caption=paste0("Table of ",params$title))
+```
+
