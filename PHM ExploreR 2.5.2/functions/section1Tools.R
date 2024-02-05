@@ -21,7 +21,7 @@ loadGroupBySelect <- function(session, dat2, id, exclude = NULL) {
   } else if (exclude == "wider") {
     names <- loadGroupBy(dat2, id, 6)
   }
-  # For reference: 
+  # For reference:
   # dat2$groupByList <- list(dat2$ltc, dat2$dep, "util.age_band_10", dat2$area, dat2$ethnicity, NA, NA)
   # dat2$groupByListText <- list("LTC Count", "Deprivation", "Age", "Area","Ethnicity","Wider Determinants","BtH Segments")
   # (never exclude age)
@@ -34,25 +34,25 @@ loadGroupBySelect <- function(session, dat2, id, exclude = NULL) {
 
 }
 updateSectionOneGroupBy <- function(session, dat2) {
-  
+
   ## Demog tab
   loadGroupBySelect(session, dat2, "oneDemogGroupBy", "demog")
-  
+
   ## Clinical Tab
   loadGroupBySelect(session, dat2, "oneClinGroupBy", "clinic")
-  
+
   ## Activity Tab
   # Different type of graphs - nothing to update - or maybe some? The y-axis might be updateable, but would need to auto-select the first option
-  
+
   ## Deprivation Tab
   loadGroupBySelect(session, dat2, "oneDeprivationGroupBy", "deprivation")
-  
+
   ## Geographical Tab
   loadGroupBySelect(session, dat2, "oneGeoGroupBy", "area")
-  
+
   ## Wider Determinants Tab
   loadGroupBySelect(session, dat2, "oneWidDetGroupBy", "wider")
-  
+
   ## BtH Tab
   loadGroupBySelect(session, dat2, "twoBTHFocus", "segmentation")
 }
@@ -90,7 +90,7 @@ clinicPlotSolveData <- function(dat, data, y, group = "area.Lower Super Output A
   data$plotField <- factor(data$plotField)
   if (!is.na(group)) {
     data <- cbind(as.data.frame(dat$attributes[,group] %>% factor()), data) %>% group_by_all()
-    colnames(data) <- c("group", colnames(data)[2]) 
+    colnames(data) <- c("group", colnames(data)[2])
   } else {
     data <- data %>% group_by_at(vars("plotField"))
   }
@@ -99,11 +99,11 @@ clinicPlotSolveData <- function(dat, data, y, group = "area.Lower Super Output A
   } else if (y == "Population (Count)") {
     data <- data %>% summarise(n = n()) %>% mutate(percentage = n) %>% ungroup() %>% as.data.frame()
   } else if (y == "Spend (Total, GBP)") {
-    data <- data %>% ungroup() 
-    data$cost <- dat$attributes$total_cost 
+    data <- data %>% ungroup()
+    data$cost <- dat$attributes$total_cost
     data <- data %>% group_by_at(colnames(data)[-ncol(data)]) %>%
       summarise(percentage = round(sum(cost))) %>% ungroup() %>% as.data.frame()
-    
+
   } else if (y == "Spend (Per Capita, GBP)") {
     data$cost <- dat$attributes$total_cost
     data <- data %>% group_by_at(colnames(data)[-ncol(data)]) %>%
@@ -113,7 +113,7 @@ clinicPlotSolveData <- function(dat, data, y, group = "area.Lower Super Output A
     data$act <- dat$attributes$total_act
     data <- data %>% group_by_at(colnames(data)[-ncol(data)]) %>%
       summarise(percentage = round(sum(act))) %>% ungroup() %>% as.data.frame()
-    
+
   } else if (y == "Activity (Per Capita)") {##
     data <- data %>% ungroup()
     data$act <- dat$attributes$total_act
@@ -123,9 +123,9 @@ clinicPlotSolveData <- function(dat, data, y, group = "area.Lower Super Output A
   data
 }
 clinicPlotSolve <- function(dat, data, y, group, xtitle = "Number of LTCs", title = "Multimorbidity", guideText = "missing Tooltip") {
-  
+
   data <- clinicPlotSolveData(dat, data, y, group = group)
-  
+
   # Generate hovertext pre-plot
   supIfNeeded <- function(data, y) {
     if(grepl("Population (C", y, fixed=TRUE)) {sapply(data,function(x) {
@@ -134,7 +134,7 @@ clinicPlotSolve <- function(dat, data, y, group, xtitle = "Number of LTCs", titl
       format(round(data, digits = 2),big.mark = ",")
     }
   }
-  data$text <- 
+  data$text <-
     if(is.na(group)) {
       paste(
         xtitle, ": ", data[,"plotField"], " \n",
@@ -149,23 +149,23 @@ clinicPlotSolve <- function(dat, data, y, group, xtitle = "Number of LTCs", titl
         sep = ""
       )
     }
-  
+
   p <- if(is.na(group)) {
     ggplot(data, aes_string(x = "plotField", y = "percentage", label = "percentage",
                             text = "text"
     ))  + scale_x_discrete(guide = guide_axis(n.dodge=3))+
-      geom_bar(stat = "identity", fill = "#3366FF", alpha = 0.5) + 
+      geom_bar(stat = "identity", fill = "#3366FF", alpha = 0.5) +
       xlab(xtitle) + ylab(y) +
-      scale_y_continuous(labels = scales::label_number_si())
+      scale_y_continuous(labels = scales::label_number(scale_cut = cut_si("unit")))
   } else {
     ggplot(data, aes_string(x = "plotField", y = "percentage", fill = "group", label = "percentage",
                             text = "text"
     ))  + scale_x_discrete(guide = guide_axis(n.dodge=3))+
       geom_bar(stat = "identity") + # , fill = if(is.na(group)) {"#3366FF"} else {group}, alpha = if(is.na(group)) {0.5} else {1}
       xlab(xtitle) + ylab(y) +
-      scale_y_continuous(labels = scales::label_number_si())
+      scale_y_continuous(labels = scales::label_number(scale_cut = cut_si("unit")))
   }
-  
+
   if(!is.na(title)) {
     p <- p + ggtitle(title)
   }
@@ -175,7 +175,7 @@ clinicPlotSolve <- function(dat, data, y, group, xtitle = "Number of LTCs", titl
     p <- p + labs(fill=guideText)+
     scale_fill_viridis_d()
   }
-  
+
   return(ggplotly(p,
                   tooltip = "text"
   ))
@@ -195,7 +195,7 @@ makeNice <- function(data) {
   })
   as.character(data)
   #######
-  
+
   sapply(data, function(x) {
     # Eliminate "_" and capitalise
     s <- strsplit(x, "_", fixed = TRUE)[[1]]
@@ -244,12 +244,12 @@ age_groups <- function(x, split_at) {
     lbls[i - 1] <-
       paste0(unique(c(split_at[i - 1], split_at[i] - 1)), collapse = "-")
   }
-  
+
   # last category
   lbls[length(lbls)] <- paste0(split_at[length(split_at)], "+")
-  
+
   agegroups <- factor(lbls[y], levels = lbls, ordered = TRUE)
-  
+
   agegroups
 }
 any_groups <- function(x, split_at) {
@@ -266,11 +266,11 @@ any_groups <- function(x, split_at) {
     lbls[i - 1] <-
       paste0(unique(c(split_at[i - 1], split_at[i] )), collapse = "-")
   }
-  
+
   # last category
   lbls[length(lbls)] <- paste0(split_at[length(split_at)], "+")
   agegroups <- factor(lbls[y], levels = lbls, ordered = TRUE)
-  
+
   agegroups
 }
 
@@ -282,14 +282,14 @@ makeNiceVCol <- function(data) {
     s <- strsplit(x, ".", fixed = TRUE)[[1]]
     s <- s[length(s)]
     # Split on _ and Capitalise
-    
+
     s <- strsplit(s, "_", fixed = TRUE)[[1]]
     s <- paste(toupper(substring(s, 1, 1)), substring(s, 2),
                sep="", collapse=" ")
-    
+
     # Concetanate with original field for reference?
     s <- paste0(s, " ( in data as field: ",x, ")")
-    
+
   })
 }
 
@@ -302,8 +302,8 @@ makeUI <- function(values, segment = "Segment1") {
                        choices = c("=", "in numeric range", ">=", "<=", "in (multiple choices select)")),
            uiOutput(paste0(segment,x,"SelectUI")),
            # if(string == TRUE) {
-           #   
-           # }      
+           #
+           # }
     )
   })
 }
@@ -325,7 +325,7 @@ removeScores <- function(x) {
     s <- strsplit(y, "_", fixed = TRUE)[[1]]
     s <- paste(toupper(substring(s, 1, 1)), substring(s, 2),
                sep="", collapse="")
-    
+
   })
 }
 
@@ -343,11 +343,11 @@ any_groups <- function(x, split_at) {
     lbls[i - 1] <-
       paste0(unique(c(split_at[i - 1], split_at[i] )), collapse = "-")
   }
-  
+
   # last category
   lbls[length(lbls)] <- paste0(split_at[length(split_at)], "+")
   agegroups <- factor(lbls[y], levels = lbls, ordered = TRUE)
-  
+
   agegroups
 }
 
@@ -382,14 +382,14 @@ getSelectedShinyTreeValues <- function(dat2, tree) {
 
 getActGraphData <- function(dat, dat2, selectedGroup) {
   acts = unique(dat2$theorows$pod_l1)[makeNice(unique(dat2$theorows$pod_l1))%in%input$oneActX]
-  data <- dat$attributes %>% 
+  data <- dat$attributes %>%
     select_at(c("id", lapply(acts, function(x) {
       if(grepl("Spend", input$oneActCoA, fixed = T)) {
         paste0("util.pod_l1.", x, ".cost")
       } else {
         paste0("util.pod_l1.", x, ".act")
       }
-    }) %>% unlist(), selectedGroup)) %>% 
+    }) %>% unlist(), selectedGroup)) %>%
     as.data.frame()
   if(grepl("Spend", input$oneActCoA, fixed = T)) {
     actOrCost = ".cost"
@@ -431,17 +431,17 @@ getActGraphData <- function(dat, dat2, selectedGroup) {
       pivot_longer(lapply(acts, function(x) {paste0("util.pod_l1.", x, actOrCost)})%>%unlist(), names_to = "pod_l1")
     if(("Total"%in%input$oneActX)) {
       print("Inserting total")
-      
+
       # data -> sum across every util col -> group, divide by n()
       t2 <- data %>% group_by_at(selectedGroup) %>% summarise(total = rowSums(across(starts_with("util."))),
                                                               total_transformed = case_when(total > 0 ~ 1,
-                                                                                            T ~ 0)) %>% 
+                                                                                            T ~ 0)) %>%
         summarise(total = sum(total),
                   n = n(),
                   total_n = sum(total_transformed),
                   cost = total/total_n)
     }
-    
+
     data <- groupAndSum(data, selectedGroup, actOrCost = actOrCost, sum)
     data$cost <- data$cost / t$value
     data$cost[is.na(data$cost)] <- 0
@@ -455,9 +455,10 @@ getActGraphData <- function(dat, dat2, selectedGroup) {
   }
   # browser()
   data <- data %>% as.data.frame()
-  
+
   print("Final part")
-  data[,"pod_l1"] <- data[,"pod_l1"] %>% as.character() %>% makeNice() #(data[,"pod_l1"] %>% as.data.frame())[,1]
+  data[,"pod_l1"] <- data[,"pod_l1"] %>% as.character() %>%
+    makeNice() #(data[,"pod_l1"] %>% as.data.frame())[,1]
   data$text <-
     paste(input$oneActCoA, " is ", format(round(data[,"cost"], digits = 2), big.mark = ","), "\n",
           "At ", makeNice(selectedGroup), " = ", data[,selectedGroup], "\n",
@@ -473,19 +474,19 @@ analysisDatasetUpdateFunction <- function(toLoad, input, output, dat2, dat, text
   print("Updating UI")
   cm <- dat$attributes%>%select(starts_with("clinic.misc")) %>% colnames
   names(cm) <- sapply(cm, removePrefix) %>% sapply(makeNice)
-  
+
   t <- dat2$groupByList[!is.na(dat2$groupByList)]
   names(t) <- dat2$groupByListText[!is.na(dat2$groupByList)]
-  
+
   t2 <- c("total_cost", "total_act")
   names(t2) <- sapply(c("total_cost", "total_act"),makeNicePPY)
-  
+
   segColNames <- c(
     dat2$demogCols[which(dat2$demogCols%in%colnames(dat$attributes))],
     c(cm, dat2$ltcCols),
     dat2$socioCols,
     t,t2 ) %>% unlist()
-  
+
   output[[paste0("text",UI)]] <- renderUI({
     lapply(1:length(dat2$AnalysisDataset$rules), function(x) {
       s2 <- dat2$AnalysisDataset$rules[[x]][2]
@@ -543,7 +544,7 @@ clinOptions <- function(data) {
       s <- strsplit(x, ".", fixed = TRUE)[[1]]
       paste0(s[-c(1,length(s))], collapse = " ")
     })
-    
+
     r2 <- lapply(unique(namesT), function(x) {
       toR <- data[which(namesT == x)]
       names(toR) <- makeNice(names(toR))
